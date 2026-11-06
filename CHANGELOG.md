@@ -4,6 +4,8 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 
 ## [Não lançado]
 
+## [1.2.0] - 2026-11-06
+
 ### Adicionado
 - Testes de regressão automatizados (`tests/`, `node:test`), obrigatórios no CI e nos hooks de merge/push (`.githooks`).
 - Barra de navegação inferior com 4 abas: Água, Calorias, Analytics e Histórico. A aba aberta fica no endereço (`#agua`...).
@@ -14,6 +16,18 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 - Opção “Registrei tudo o que comi neste dia” (diário completo).
 - Aba Água: registro em ml (botões rápidos e volume livre), água pura e outras bebidas separadas, soma do dia, copo com o nível em relação à meta, últimos 7 dias e meta versionada (hábito ajustável ou limite de profissional; só água pura ou todas as bebidas), com a referência EFSA de água total. Volume muito alto gera aviso neutro; sem prêmio por excesso.
 
+### Alterado
+- Diário parcial não mostra “déficit”: o saldo só ganha cor e rótulo de déficit/superávit em dia marcado como completo.
+- A meta de calorias saiu de Meus dados; a meta antiga vira uma meta manual versionada, sem perda.
+- Alimentos registrados guardam os 12 nutrientes da quantidade (açúcares, gordura saturada, colesterol, cálcio, ferro, potássio).
+- Verificações do `tools/smoke.cjs` (incluindo as da localização 1.1.1) migradas para `tests/`.
+
+## [1.1.1] - 2026-11-06
+
+### Corrigido
+- Nomes dos 13.225 registros USDA localizados para português brasileiro, com revisão de termos alimentares e preservação das denominações originais no JSON.
+- Base compacta regenerada e cache atualizado para apresentar os nomes em português no app.
+- Validação garante que IDs, nutrientes, porções e os registros da TACO não foram alterados pela localização.
 
 ## [1.1.0] - 2026-11-05
 

@@ -10,6 +10,9 @@ test("base completa carrega e a busca encontra TACO e USDA", () => {
   assert.equal(run("baseFoods.length"), run("ALIMENTOS_BASE.total"));
   assert.ok(run('searchFoods("arroz com feijão").length') > 0);
   assert.ok(run('searchFoods("frango").some(f => f.src.startsWith("usda"))'));
+  // hotfix 1.1.1: nomes USDA em português continuam achados pela busca
+  assert.equal(run(`wordMatch(makeFood("test", "Feijões e arroz", "usda_fndds", []), "feijao", translations("feijao"))`), 2);
+  assert.equal(run(`wordMatch(makeFood("test", "Pães integrais", "usda_fndds", []), "pao", translations("pao"))`), 2);
 });
 
 test("tradução casa palavra inteira e fontes oficiais vêm antes da comunidade", () => {
