@@ -4,6 +4,8 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 
 ## [Não lançado]
 
+## [1.2.1] - 2026-11-06
+
 ### Corrigido
 - **Abas quebradas e barra com botões brancos depois da atualização para a 1.2.0.** O GitHub Pages manda guardar os arquivos por 10 minutos (`Cache-Control: max-age=600`) e eles tinham sempre o mesmo endereço. Por isso o `index.html` novo carregava o `style.css` e os scripts da 1.1.0 que estavam no cache. O CSS antigo não estilizava a barra, que ficava com os botões padrão brancos e os ícones grandes. O `forms.js` antigo procurava o campo `pMeta`, removido na 1.2.0, e o erro interrompia a inicialização, deixando as abas sem resposta.
   - CSS e scripts agora têm a versão no endereço (`?v=`); o `index.html` declara a versão (`data-versao`) e o app recarrega uma vez se página e scripts não baterem.
