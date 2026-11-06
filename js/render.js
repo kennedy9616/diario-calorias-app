@@ -21,6 +21,8 @@ function renderSummary() {
   $("sEx").textContent = fmt(t.ex);
   $("sCarb").textContent = fmt(t.carb) + " g";
   $("sProt").textContent = fmt(t.prot) + " g";
+  $("sGord").textContent = fmt(t.gord) + " g";
+  $("sMicro").textContent = `Fibras ${fmt(t.fibra)} g · Sódio ${fmt(t.sodio)} mg`;
 
   const b = $("balance");
   if (!t.has && !t.ex) {
@@ -59,6 +61,13 @@ function itemEl(main, sub, kcal, onDel) {
   return el;
 }
 
+// "150 g", "1,5 kg", "2 × 1 cup (480 g)"
+function qtyLabel(f) {
+  if (f.unit === "porcao") return `${fmt1(f.qtd || 1)} × ${f.porcao} (${fmt(f.g || 0)} g)`;
+  if (f.unit === "kg") return fmt1(f.g / 1000) + " kg";
+  return fmt(f.g || 0) + " " + (f.unit === "ml" ? "ml" : "g");
+}
+
 function renderFoods() {
   const box = $("foodList");
   box.innerHTML = "";
@@ -78,10 +87,11 @@ function renderFoods() {
     h.children[1].textContent = fmt(items.reduce((s, f) => s + (f.kcal || 0), 0)) + " kcal";
     g.appendChild(h);
     items.forEach(f => {
-      const q = f.unit === "kg" ? fmt1(f.g / 1000) + " kg" : fmt(f.g || 0) + " " + (f.unit === "ml" ? "ml" : "g");
+      const macros = [[f.carb, "carb"], [f.prot, "prot"], [f.gord, "gord"]]
+        .filter(([v]) => v != null).map(([v, k]) => `${fmt(v)} g ${k}`);
       g.appendChild(itemEl(
         f.name,
-        `${q} · ${fmt(f.carb || 0)} g carb · ${fmt(f.prot || 0)} g prot`,
+        [qtyLabel(f)].concat(macros).join(" · "),
         fmt(f.kcal || 0) + " kcal",
         () => { days[cur].foods = days[cur].foods.filter(x => x.id !== f.id); saveDay(); renderAll(); }
       ));

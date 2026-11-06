@@ -27,6 +27,7 @@
   <script defer src="js/data.js"></script>
   <script defer src="js/utils.js"></script>
   <script defer src="js/state.js"></script>
+  <script defer src="js/foods.js"></script>
   <script defer src="js/storage.js"></script>
   <script defer src="js/render.js"></script>
   <script defer src="js/forms.js"></script>
@@ -45,6 +46,7 @@
       <button type="button" id="mNew"><b>Criar arquivo de dados</b><small>Escolha uma pasta do computador. Tudo o que você registrar é gravado nele na hora.</small></button>
       <button type="button" id="mOpen"><b>Abrir arquivo de dados</b><small>Carrega um arquivo .json salvo antes (de outro aparelho, por exemplo).</small></button>
       <button type="button" id="mDown"><b>Baixar cópia de segurança</b><small>Baixa um arquivo .json com todos os seus registros.</small></button>
+      <button type="button" id="mExport"><b>Exportar alimentos cadastrados</b><small>Baixa os alimentos que você cadastrou, no formato da base de alimentos, para incluir no app.</small></button>
     </div>
     <input type="file" id="fileIn" accept=".json,application/json" class="hide">
   </header>
@@ -78,7 +80,9 @@
     <div class="macros">
       <div>Carboidratos<br><b class="num" id="sCarb">0 g</b></div>
       <div>Proteínas<br><b class="num" id="sProt">0 g</b></div>
+      <div>Gorduras<br><b class="num" id="sGord">0 g</b></div>
     </div>
+    <div class="micro num" id="sMicro"></div>
     <div id="metaBox" class="hide">
       <div class="bar" id="metaBar"><i id="metaFill"></i></div>
       <div class="barlbl"><span id="metaTxt"></span><span id="metaRest"></span></div>
@@ -99,11 +103,14 @@
         <div class="sugg" id="sugg"></div>
       </div>
       <div class="custom" id="customBox">
-        <p>Alimento fora da lista. Informe os valores por 100 g (veja no rótulo); ele fica salvo para as próximas vezes.</p>
+        <p>Alimento fora da lista. Informe os valores em 100 g (veja no rótulo). Ele fica salvo para as próximas vezes, no formato da base de alimentos.</p>
         <div class="row">
-          <div><label for="cKcal">kcal / 100 g</label><input id="cKcal" type="number" inputmode="decimal" min="0"></div>
-          <div><label for="cCarb">Carb. (g)</label><input id="cCarb" type="number" inputmode="decimal" min="0" placeholder="opcional"></div>
-          <div><label for="cProt">Prot. (g)</label><input id="cProt" type="number" inputmode="decimal" min="0" placeholder="opcional"></div>
+          <div><label for="cKcal">kcal em 100 g</label><input id="cKcal" type="number" inputmode="decimal" min="0" max="950"></div>
+          <div><label for="cCarb">Carboidratos (g)</label><input id="cCarb" type="number" inputmode="decimal" min="0" max="100" placeholder="opcional"></div>
+        </div>
+        <div class="row">
+          <div><label for="cProt">Proteínas (g)</label><input id="cProt" type="number" inputmode="decimal" min="0" max="100" placeholder="opcional"></div>
+          <div><label for="cGord">Gorduras (g)</label><input id="cGord" type="number" inputmode="decimal" min="0" max="100" placeholder="opcional"></div>
         </div>
       </div>
       <div class="row">
@@ -119,6 +126,11 @@
         </select>
       </div>
       <div class="preview" id="foodPrev"></div>
+      <details class="nutri hide" id="foodNutri">
+        <summary>Informação nutricional <span id="nutriQty"></span></summary>
+        <table id="nutriTable"></table>
+        <p class="hint" id="nutriSrc"></p>
+      </details>
       <button type="button" class="btn" id="addFood" disabled>Adicionar alimento</button>
       <div class="list" id="foodList"></div>
     </div>
@@ -177,7 +189,7 @@
   </section>
 
   <footer>
-    TMB pela equação de Mifflin-St Jeor. Calorias dos alimentos são aproximadas por 100 g, com base na Tabela TACO (Unicamp) e em rótulos médios. Gasto dos exercícios pelo Compendium of Physical Activities (METs), contando só o gasto <i>extra</i> além do basal, para não somar o basal duas vezes. É uma estimativa para acompanhamento — metas e ajustes vêm da sua equipe de saúde.
+    TMB pela equação de Mifflin-St Jeor. Alimentos: Tabela TACO, 4ª edição (NEPA/Unicamp), USDA FoodData Central (domínio público) e rótulos médios; valores por 100 g, aproximados. Gasto dos exercícios pelo Compendium of Physical Activities (METs), contando só o gasto <i>extra</i> além do basal, para não somar o basal duas vezes. É uma estimativa para acompanhamento — metas e ajustes vêm da sua equipe de saúde.
   </footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

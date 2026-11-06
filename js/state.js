@@ -27,24 +27,25 @@ function day(k = cur) {
   return days[k] || { foods: [], ex: [] };
 }
 
-// alimentos da tabela + os cadastrados pelo usuário
-function allFoods() {
-  return FOODS.map(f => ({ n: f[0], k: f[1], c: f[2], p: f[3] }))
-    .concat((profile.customFoods || []).filter(f => f && f.n).map(f => ({ ...f, custom: true })));
-}
-
 // Hoje usa sempre o perfil atual; dias passados guardam o gasto da época.
 function dayTdee(k) {
   const d = days[k];
   return (k === TODAY || !d || d.tdee == null) ? tdee() : d.tdee;
 }
 
+// soma do dia; nutriente sem dado (null) ou de registros antigos conta como 0
 function totals(k = cur) {
   const d = day(k);
-  const cons = d.foods.reduce((s, f) => s + (f.kcal || 0), 0);
-  const ex = d.ex.reduce((s, e) => s + (e.kcal || 0), 0);
-  const carb = d.foods.reduce((s, f) => s + (f.carb || 0), 0);
-  const prot = d.foods.reduce((s, f) => s + (f.prot || 0), 0);
+  const sum = (list, key) => list.reduce((s, x) => s + (x[key] || 0), 0);
+  const ex = sum(d.ex, "kcal");
   const base = dayTdee(k);
-  return { cons, ex, carb, prot, base, gasto: base + ex, has: d.foods.length > 0 };
+  return {
+    cons: sum(d.foods, "kcal"),
+    carb: sum(d.foods, "carb"),
+    prot: sum(d.foods, "prot"),
+    gord: sum(d.foods, "gord"),
+    fibra: sum(d.foods, "fibra"),
+    sodio: sum(d.foods, "sodio"),
+    ex, base, gasto: base + ex, has: d.foods.length > 0
+  };
 }

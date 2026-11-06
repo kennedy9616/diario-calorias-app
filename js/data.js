@@ -52,3 +52,55 @@ const EXS = [
 ];
 
 const MEALS = ["Café da manhã", "Lanche da manhã", "Almoço", "Lanche da tarde", "Jantar", "Ceia"];
+
+// Nutrientes por 100 g, na mesma ordem de data/alimentos-base.js (tools/gerar-base.pl).
+// k = nome do campo no schema de data/alimentos_unificados.json
+const NUTRIENTES = [
+  { k: "calorias_kcal", n: "Calorias", u: "kcal" },
+  { k: "carboidratos_g", n: "Carboidratos", u: "g" },
+  { k: "proteinas_g", n: "Proteínas", u: "g" },
+  { k: "gorduras_totais_g", n: "Gorduras totais", u: "g" },
+  { k: "fibras_g", n: "Fibras", u: "g" },
+  { k: "sodio_mg", n: "Sódio", u: "mg" },
+  { k: "acucares_totais_g", n: "Açúcares", u: "g" },
+  { k: "gorduras_saturadas_g", n: "Gorduras saturadas", u: "g" },
+  { k: "colesterol_mg", n: "Colesterol", u: "mg" },
+  { k: "calcio_mg", n: "Cálcio", u: "mg" },
+  { k: "ferro_mg", n: "Ferro", u: "mg" },
+  { k: "potassio_mg", n: "Potássio", u: "mg" }
+];
+// posição de cada nutriente no array (N.kcal = 0, N.carb = 1, ...)
+const N = { kcal: 0, carb: 1, prot: 2, gord: 3, fibra: 4, sodio: 5 };
+
+// A base do USDA está em inglês. Buscar em português também procura estas traduções
+// (ex.: "frango" encontra "Chicken, breast..."). Chaves sem acento.
+const SINONIMOS = {
+  abacate: ["avocado"], abacaxi: ["pineapple"], abobora: ["pumpkin", "squash"], abobrinha: ["zucchini"],
+  acucar: ["sugar"], agua: ["water"], alface: ["lettuce"], alho: ["garlic"], amendoa: ["almond"],
+  amendoim: ["peanut"], arroz: ["rice"], assado: ["roasted", "baked"], atum: ["tuna"], aveia: ["oat"],
+  azeite: ["olive oil"], azeitona: ["olive"], bacalhau: ["cod"], batata: ["potato"], berinjela: ["eggplant"],
+  biscoito: ["cookie", "cracker", "biscuit"], bolacha: ["cookie", "cracker"], bolo: ["cake"], bovina: ["beef"],
+  brocolis: ["broccoli"], cafe: ["coffee"], camarao: ["shrimp"], caranguejo: ["crab"], carne: ["beef", "meat"],
+  carneiro: ["lamb", "mutton"], castanha: ["nut", "cashew"], cebola: ["onion"], cenoura: ["carrot"],
+  cereja: ["cherr"], cerveja: ["beer"], cha: ["tea"], chocolate: ["chocolate"], coco: ["coconut"],
+  cogumelo: ["mushroom"], cordeiro: ["lamb"], couve: ["kale", "collard"], "couve-flor": ["cauliflower"],
+  cozido: ["cooked", "boiled"], creme: ["cream"], cru: ["raw"], crua: ["raw"], desnatado: ["skim", "nonfat"],
+  doce: ["sweet", "candy"], ervilha: ["pea"], espinafre: ["spinach"], farinha: ["flour"], feijao: ["bean"],
+  figado: ["liver"], frango: ["chicken"], frito: ["fried"], frita: ["fried"], galinha: ["chicken"],
+  geleia: ["jam", "jelly"], gelatina: ["gelatin"], grao: ["chickpea"], grelhado: ["grilled", "broiled"],
+  hamburguer: ["hamburger", "burger"], inhame: ["yam", "taro"], integral: ["whole"], iogurte: ["yogurt"],
+  lagosta: ["lobster"], laranja: ["orange"], leite: ["milk"], lentilha: ["lentil"], limao: ["lemon", "lime"],
+  linguica: ["sausage"], lula: ["squid"], maca: ["apple"], macarrao: ["pasta", "macaroni", "spaghetti", "noodle"],
+  maionese: ["mayonnaise"], mamao: ["papaya"], mandioca: ["cassava"], manga: ["mango"], manteiga: ["butter"],
+  margarina: ["margarine"], mel: ["honey"], melancia: ["watermelon"], melao: ["melon"], milho: ["corn"],
+  molho: ["sauce", "gravy"], morango: ["strawberr"], mostarda: ["mustard"], mucarela: ["mozzarella"],
+  mussarela: ["mozzarella"], nata: ["cream"], noz: ["walnut"], oleo: ["oil"], ovo: ["egg"], pao: ["bread"],
+  panqueca: ["pancake"], parmesao: ["parmesan"], pato: ["duck"], peito: ["breast"], peixe: ["fish"],
+  pepino: ["cucumber"], pera: ["pear"], peru: ["turkey"], pessego: ["peach"], pimentao: ["pepper"],
+  pipoca: ["popcorn"], polvo: ["octopus"], porco: ["pork"], presunto: ["ham"], pudim: ["pudding"],
+  queijo: ["cheese"], refrigerante: ["soda", "cola", "soft drink"], repolho: ["cabbage"], requeijao: ["cream cheese"],
+  sal: ["salt"], salada: ["salad"], salmao: ["salmon"], salsicha: ["sausage", "frankfurter"],
+  sanduiche: ["sandwich"], sardinha: ["sardine"], soja: ["soy"], sopa: ["soup"], sorvete: ["ice cream"],
+  suco: ["juice"], suina: ["pork"], tomate: ["tomato"], torrada: ["toast"], torta: ["pie"], trigo: ["wheat"],
+  uva: ["grape"], vinagre: ["vinegar"], vinho: ["wine"]
+};

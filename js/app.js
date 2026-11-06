@@ -1,7 +1,7 @@
 /* ==========================================================
    Inicialização do app
-   Ordem dos scripts (index.html): data → utils → state → storage
-   → render → forms → install → app
+   Ordem dos scripts (index.html): data → utils → state → foods
+   → storage → render → forms → install → app
    ========================================================== */
 
 function initTabs() {
@@ -38,6 +38,9 @@ function init() {
     $("profBox").open = true;
     toast("Bem-vindo! Preencha “Meus dados” no fim da página.", 4000);
   }
+
+  // base completa de alimentos (~2 MB): carrega depois que a tela já apareceu
+  setTimeout(loadFoodBase, 0);
 
   // pede ao sistema para não apagar os dados por falta de espaço
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (_) { /* opcional */ }

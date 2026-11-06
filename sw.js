@@ -5,7 +5,7 @@
 // Ao adicionar ou renomear arquivos do app, atualize a lista FILES e
 // aumente o número da versão em CACHE.
 
-const CACHE = "diario-calorias-v2";
+const CACHE = "diario-calorias-v3";
 const FONT_CACHE = "diario-calorias-fontes-v1";
 const FILES = [
   "./",
@@ -15,11 +15,13 @@ const FILES = [
   "./js/data.js",
   "./js/utils.js",
   "./js/state.js",
+  "./js/foods.js",
   "./js/storage.js",
   "./js/render.js",
   "./js/forms.js",
   "./js/install.js",
   "./js/app.js",
+  "./data/alimentos-base.js",
   "./icons/apple-touch-icon.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
