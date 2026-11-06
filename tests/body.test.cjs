@@ -53,20 +53,70 @@ test("tendência = média dos dias com pesagem nos últimos 7 dias, com a contag
   assert.deepEqual({ ...a.run("pesoTendencia(addDays(TODAY, -30))") }, { peso: null, dias: 0 });
 });
 
-test("pesagem isolada não recalcula: TMB usa o peso de Meus dados até haver 3 dias na semana", () => {
+test("peso usado nos cálculos: média de 7 dias com 3+ dias de pesagem; senão a última pesagem; sem pesagem, o cadastro", () => {
   const a = app();
-  a.pesar(0, 90);
   let ref = a.run("pesoReferencia()");
   assert.equal(ref.metodo, "manual");
   assert.equal(ref.peso, 70);
-  assert.equal(ref.dias, 1);
   assert.equal(a.run("tmb()"), 1617.5);
 
-  a.pesar(1, 90); a.pesar(2, 90);
+  a.pesar(0, 90);
+  ref = a.run("pesoReferencia()");
+  assert.equal(ref.metodo, "ultima_pesagem");
+  assert.equal(ref.peso, 90);
+  assert.equal(ref.dias, 1);
+  assert.equal(a.run("tmb()"), 1617.5 + 200);   // +20 kg × 10
+
+  a.pesar(1, 80); a.pesar(2, 85);
   ref = a.run("pesoReferencia()");
   assert.equal(ref.metodo, "tendencia_7d");
-  assert.equal(ref.peso, 90);
-  assert.equal(a.run("tmb()"), 1617.5 + 200);   // +20 kg × 10
+  assert.equal(ref.peso, 85);
+});
+
+test("peso atual = dia mais recente com pesagem; medição antiga incluída depois não troca o peso atual", () => {
+  const a = app();
+  a.pesar(0, 80);
+  a.pesar(10, 95);   // digitada depois, mas com data antiga
+  const p = a.run("pesoAtual()");
+  assert.equal(p.peso, 80);
+  assert.equal(p.data, a.d(0));
+  assert.equal(a.run("medidas.length"), 2, "histórico preservado");
+  assert.equal(a.run(`pesoAtual("${a.d(5)}").peso`), 95, "em datas passadas vale a pesagem da época");
+});
+
+test("duas pesagens na mesma data: vale a média do dia (peso atual e gráfico)", () => {
+  const a = app();
+  a.pesar(0, 80); a.pesar(0, 81);
+  const p = a.run("pesoAtual()");
+  assert.equal(p.peso, 80.5);
+  assert.equal(p.n, 2);
+});
+
+test("editar uma medição corrige só ela; a lista continua em ordem de data", () => {
+  const a = app();
+  a.pesar(3, 82); a.pesar(1, 81);
+  const id = a.run("medidas[0].id");
+  assert.equal(a.run(`updateMedida("${id}", { data: addDays(TODAY, 0), peso_kg: 79.5 }).ok`), true);
+  assert.equal(a.run("medidas.length"), 2);
+  assert.equal(a.run("medidas[1].id"), id, "foi para o fim (data mais recente)");
+  assert.equal(a.run("pesoAtual().peso"), 79.5);
+  assert.equal(a.run(`updateMedida("${id}", { data: addDays(TODAY, 1), peso_kg: 79 }).ok`), false, "data futura");
+  assert.equal(a.run(`updateMedida("${id}", { data: TODAY, peso_kg: 5 }).ok`), false, "fora da faixa");
+  assert.equal(a.run("pesoAtual().peso"), 79.5, "erro não altera");
+});
+
+test("formulário de medidas aceita vírgula decimal e recusa texto com mensagem no campo", () => {
+  const a = app();
+  a.run("initBodyForm(); renderAll = () => {}; toast = () => {};");
+  a.el("mData").value = a.run("TODAY");
+  a.el("mPeso").value = "72,5";
+  a.el("addMedida").click();
+  assert.equal(a.run("medidas[0].peso_kg"), 72.5);
+  a.el("mPeso").value = "72kg";
+  a.el("addMedida").click();
+  assert.match(a.el("medidaErro").textContent, /use só números/);
+  assert.equal(a.el("mPeso").getAttribute("aria-invalid"), "true");
+  assert.equal(a.run("medidas.length"), 1);
 });
 
 test("idade pela data de nascimento acompanha o aniversário", () => {
@@ -168,23 +218,78 @@ test("gasto do exercício usa o peso de referência", () => {
   assert.equal(Math.round(a.run("exKcal().kcal")), Math.round((4.3 - 1) * 80));
 });
 
-test("aba Histórico tem TMB, registro de medidas, gráfico e os dados detalhados", () => {
-  const start = html.indexOf('<main id="view-historico"');
+test("Perfil tem dados pessoais, peso atual, registro e histórico de medidas, TMB e metas", () => {
+  const start = html.indexOf('<main id="view-perfil"');
   const sec = html.slice(start, html.indexOf("</main>", start));
-  for (const id of ["tmbVal", "tmbDet", "tmbAviso", "mData", "mPeso", "mCintura", "mQuadril", "mBraco", "mCoxa", "mGordura",
-    "addMedida", "medidaErro", "pesoChart", "pesoTend", "pesoVar", "medidaList", "pNasc",
+  for (const id of ["pNome", "pNasc", "pIdade", "pSexo", "pAlt", "pObjetivo", "pFator", "pCopo", "pSalvar", "pErro", "pMsg",
+    "pesoAtual", "pesoAtualSub", "tmbVal", "tmbDet", "tmbAviso", "mData", "mPeso", "mCintura", "mQuadril", "mBraco", "mCoxa", "mGordura",
+    "addMedida", "medidaErro", "pesoChart", "pesoTend", "pesoVar", "medidaList", "metasHist",
     "condGestante", "condLactante", "condTA", "condRenal", "condLiquidos"]) {
-    assert.ok(sec.includes(`id="${id}"`), `ausente no Histórico: ${id}`);
+    assert.ok(sec.includes(`id="${id}"`), `ausente no Perfil: ${id}`);
   }
+  assert.match(sec, /<option value="ganhar">Ganhar peso<\/option>/);
 });
 
-test("renderHistorico desenha sem erro com e sem dados", () => {
+test("renderCorpo desenha sem erro com e sem dados", () => {
   const a = app();
-  a.run("renderHistorico()");
+  a.run("renderCorpo()");
   assert.match(a.el("medidaList").innerHTML, /Nenhuma/);
+  assert.match(a.el("pesoAtual").textContent, /70/);
+  assert.match(a.el("pesoAtualSub").textContent, /cadastro/);
   a.pesar(0, 80); a.pesar(1, 81); a.pesar(2, 82);
-  a.run("renderHistorico()");
+  a.run("renderCorpo()");
   assert.match(a.el("pesoChart").innerHTML, /<svg/);
   assert.match(a.el("tmbVal").textContent, /\d/);
   assert.match(a.el("pesoTend").textContent, /81/);
+  assert.match(a.el("medidaList").innerHTML, /data-edit=/);
+  assert.match(a.el("medidaList").innerHTML, /aria-label="Excluir medição/);
+});
+
+test("perfil novo não tem números inventados: TMB, gasto e metas estimadas ficam indisponíveis, sem NaN", () => {
+  const a = loadApp();
+  a.run("medidas = []; metas = []; days = {}; persist = () => {}");
+  assert.equal(a.run("profile.peso"), null);
+  assert.equal(a.run("tmb()"), null);
+  assert.equal(a.run("tdee()"), null);
+  assert.equal(a.run("totals().gasto"), null);
+  assert.equal(a.run("estimarMetaKcal(0).ok"), false);
+  assert.equal(a.run('estimarMetaProteina("efsa").ok'), false);
+  assert.equal(a.run("estimarMetaAgua().ok"), false);
+  a.run('days[TODAY] = { foods: [{ id: "a", kcal: 300 }], ex: [] }; saveDay(TODAY);');
+  assert.equal(a.run("days[TODAY].tdee"), null);
+  a.run("renderAll()");
+  const txt = ["sGasto", "sTmb", "balLbl", "tmbVal", "anDefSub", "pesoAtual", "profSum"].map(id => a.el(id).textContent).join(" | ");
+  assert.doesNotMatch(txt, /NaN|Infinity|undefined/);
+  assert.match(a.el("sGasto").textContent, /—/);
+  assert.match(a.el("balLbl").textContent, /complete o Perfil/i);
+  assert.deepEqual(a.erros, [], "renderAll sem erros no console");
+});
+
+test("salvar o Perfil: vírgula decimal, validação por campo e efeito imediato no cálculo", () => {
+  const a = loadApp();
+  a.run("medidas = []; metas = []; days = {}; renderAll = () => {}; toast = () => {};");
+  const preencher = o => Object.entries(o).forEach(([id, v]) => { a.el(id).value = v; });
+  preencher({ pNome: "  Ana  ", pNasc: "", pIdade: "30", pAlt: "165,5", pSexo: "F", pObjetivo: "ganhar", pFator: "1.3", pCopo: "300" });
+  a.el("condTA").checked = false;
+  assert.equal(a.run("salvarPerfil()"), true);
+  assert.equal(a.run("profile.nome"), "Ana");
+  assert.equal(a.run("profile.altura"), 165.5);
+  assert.equal(a.run("profile.objetivo"), "ganhar");
+  assert.equal(a.run("prefs.copo_ml"), 300);
+  assert.equal(a.run("tmb()"), null, "sem peso ainda");
+  a.run("addMedida({ data: TODAY, peso_kg: 60 })");
+  assert.equal(a.run("tmb()"), 10 * 60 + 6.25 * 165.5 - 5 * 30 - 161);
+  assert.match(a.el("pMsg").textContent, /salvos/);
+
+  preencher({ pAlt: "1,72" });
+  assert.equal(a.run("salvarPerfil()"), false);
+  assert.match(a.el("pErro").textContent, /centímetros/);
+  assert.equal(a.el("pAlt").getAttribute("aria-invalid"), "true");
+  assert.equal(a.run("profile.altura"), 165.5, "erro não altera o perfil");
+  preencher({ pAlt: "170", pIdade: "abc" });
+  assert.equal(a.run("salvarPerfil()"), false);
+  assert.match(a.el("pErro").textContent, /Idade/);
+  preencher({ pIdade: "30", pCopo: "-5" });
+  assert.equal(a.run("salvarPerfil()"), false);
+  assert.match(a.el("pErro").textContent, /Copo/);
 });

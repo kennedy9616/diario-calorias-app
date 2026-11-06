@@ -168,7 +168,7 @@ function loadFoodBase(onChange) {
   if (baseState !== "idle") return;
   baseState = "loading";
   const s = document.createElement("script");
-  s.src = "data/alimentos-base.js";
+  s.src = "data/alimentos-base.js?v=" + APP_VERSION;   // versão na URL: nunca mistura cache de publicações diferentes
   s.async = true;
   const done = ok => {
     if (ok) {

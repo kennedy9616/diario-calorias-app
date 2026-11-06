@@ -44,7 +44,7 @@ jobs:
 
       - name: Scripts carregados pelo index.html existem
         run: |
-          grep -oE 'src="js/[^"]+"' index.html | sed 's/src="//; s/"$//' | while read -r p; do
+          grep -oE 'src="js/[^"?]+' index.html | sed 's/src="//' | while read -r p; do
             test -f "$p" || { echo "index.html carrega um arquivo que não existe: $p"; exit 1; }
             grep -q "\"./$p\"" sw.js || { echo "$p não está na lista FILES do sw.js (não funcionaria offline)"; exit 1; }
           done

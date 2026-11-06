@@ -47,7 +47,8 @@ function estimarMetaKcal(pct) {
   const fora = foraDoEscopo();
   if (fora) return fora;
   if (!DEFICIT_OPCOES.includes(pct)) return erro("Déficit precisa ser 0, 10% ou 15%.");
-  if (pct > 0 && profile.objetivo !== "perder") return erro("Déficit só com o objetivo “perder peso”.");
+  if (pct > 0 && profile.objetivo !== "perder") return erro("Déficit só com o objetivo “perder peso” (Perfil).");
+  if (tmb() == null) return erro(`Para estimar, complete no Perfil: ${dadosFaltando().join(", ")}.`);
   const p = perfilCalculo();
   const ref = pesoReferencia();
   const manut = tdee(p);
@@ -70,7 +71,9 @@ function metaKcalInformada(valor, origem) {
   const v = Number(valor);
   if (!isNum(v) || v < KCAL_FAIXA[0] || v > KCAL_FAIXA[1]) return erro(`Informe entre ${fmt(KCAL_FAIXA[0])} e ${fmt(KCAL_FAIXA[1])} kcal.`);
   if (origem === "manual") {
-    const piso = Math.round(tmb());
+    const b = tmb();
+    if (b == null) return erro(`Para conferir uma meta própria, complete no Perfil: ${dadosFaltando().join(", ")}. Ou use a origem “Profissional”.`);
+    const piso = Math.round(b);
     if (v < piso) return erro(`Abaixo da sua TMB estimada (${fmt(piso)} kcal): metas assim só com acompanhamento profissional (origem “Profissional”).`);
   } else if (origem !== "profissional") return erro("Origem inválida.");
   return { ok: true, meta: {
@@ -87,7 +90,9 @@ function estimarMetaProteina(criterio) {
   if (fora) return fora;
   const p = perfilCalculo();
   const ref = pesoReferencia();
+  if (!naFaixa(ref.peso, FAIXA_PESO)) return erro("Registre seu peso no Perfil para estimar a proteína.");
   if (criterio !== "efsa") {
+    if (!naFaixa(p.altura, FAIXA_ALTURA)) return erro("Informe sua altura no Perfil (o critério confere o IMC).");
     if (!treinoRegular()) return erro("O critério ISSN vale para quem treina regularmente (2 ou mais dias por semana). Preencha seu treino.");
     if (imc(p.peso, p.altura) >= 30) return erro("Com IMC de 30 ou mais, o app não aplica coeficiente elevado ao peso atual: defina com profissional.");
   }
@@ -172,22 +177,41 @@ function migrarMetaAntiga() {
   });
 }
 
-/* ---------- Tela: cartão "Metas e objetivo" ---------- */
+
+/* ---------- Tela: metas no Perfil ---------- */
 const dataBr = k => fromKey(k).toLocaleDateString("pt-BR");
+const ORIGEM_ROTULO = { estimada: "estimativa do app", profissional: "profissional de saúde", manual: "definida por você" };
+const META_TIPO_ROTULO = { kcal: "Calorias", proteina: "Proteína", agua: "Água" };
+
+function metaValorTxt(m) {
+  return m.tipo === "kcal" ? fmt(m.valor) + " kcal/dia" : m.tipo === "agua" ? fmtMl(m.valor) + "/dia" : fmt1(m.valor) + " g/dia";
+}
 
 function metaResumo(m, unidade) {
   if (!m) return "Sem meta definida.";
-  const orig = { estimada: "estimativa do app", profissional: "profissional de saúde", manual: "definida por você" }[m.origem];
-  return `${m.tipo === "kcal" ? fmt(m.valor) : fmt1(m.valor)} ${unidade} · ${orig} · desde ${dataBr(m.vigencia_inicio)}. ${m.metodo}.`;
+  return `${m.tipo === "kcal" ? fmt(m.valor) : fmt1(m.valor)} ${unidade} · ${ORIGEM_ROTULO[m.origem]} · desde ${dataBr(m.vigencia_inicio)}. ${m.metodo}.`;
+}
+
+// todas as metas, da mais recente para a mais antiga, com a vigência de cada uma
+function renderMetasHist() {
+  const box = $("metasHist");
+  if (!metas.length) { box.innerHTML = '<div class="empty">Nenhuma meta salva ainda.</div>'; return; }
+  const lista = metas.slice().sort((a, b) => (a.vigencia_inicio < b.vigencia_inicio ? 1 : a.vigencia_inicio > b.vigencia_inicio ? -1 : 0));
+  box.innerHTML = '<table class="ntab"><tr><th>Meta</th><th class="num">Valor</th><th>Vigência</th></tr>'
+    + lista.map(m => `<tr><td>${META_TIPO_ROTULO[m.tipo]}<br><small class="muted">${escapeHtml(ORIGEM_ROTULO[m.origem])}</small></td>`
+      + `<td class="num">${escapeHtml(metaValorTxt(m))}</td>`
+      + `<td>${dataBr(m.vigencia_inicio)} – ${m.vigencia_fim ? dataBr(m.vigencia_fim) : "atual"}</td></tr>`).join("")
+    + "</table>";
 }
 
 function renderMetasForm() {
   const t = profile.treino || {};
-  $("mtObjetivo").value = profile.objetivo || "manter";
-  $("mtTreinoTipo").value = t.tipo || "nenhum";
-  $("mtTreinoDias").value = t.dias || "";
-  $("mtTreinoMin").value = t.min || "";
-  $("mtTreinoInt").value = t.intensidade || "moderada";
+  // não mexe no campo que a pessoa está editando
+  const por = (id, v) => { if (document.activeElement !== $(id)) $(id).value = v; };
+  por("mtTreinoTipo", t.tipo || "nenhum");
+  por("mtTreinoDias", t.dias || "");
+  por("mtTreinoMin", t.min || "");
+  por("mtTreinoInt", t.intensidade || "moderada");
   $("mtKAtual").textContent = metaResumo(metaVigente("kcal", TODAY), "kcal/dia");
   $("mtPAtual").textContent = metaResumo(metaVigente("proteina", TODAY), "g/dia");
   const k = metaVigente("kcal", TODAY), p = metaVigente("proteina", TODAY);
@@ -200,22 +224,24 @@ function renderMetasForm() {
     $("mtPCrit").value = !p ? "nenhuma" : p.origem === "estimada" ? p.dados_utilizados.criterio : "profissional";
     if (p && p.origem !== "estimada") $("mtPValor").value = p.valor;
   }
-  $("metasSum").textContent = [k && fmt(k.valor) + " kcal", p && fmt1(p.valor) + " g prot"].filter(Boolean).join(" · ");
+  $("metasSum").textContent = [k && fmt(k.valor) + " kcal", p && fmt1(p.valor) + " g prot"].filter(Boolean).join(" · ") || "sem metas";
+  $("mtObjetivoTxt").textContent = { perder: "perder peso", manter: "manter o peso", ganhar: "ganhar peso" }[profile.objetivo] || "manter o peso";
+  $("mtKGanhar").classList.toggle("hide", profile.objetivo !== "ganhar");
   updateMetaFields();
+  renderMetasHist();
 }
 
 function updateMetaFields() {
   const o = $("mtKOrigem").value;
   $("mtKDefBox").classList.toggle("hide", o !== "estimada");
   $("mtKValorBox").classList.toggle("hide", o !== "profissional" && o !== "manual");
-  $("mtKDef").disabled = $("mtObjetivo").value !== "perder";
+  $("mtKDef").disabled = profile.objetivo !== "perder";
   if ($("mtKDef").disabled) $("mtKDef").value = "0";
   $("mtPValorBox").classList.toggle("hide", $("mtPCrit").value !== "profissional");
 }
 
 function readTreino() {
   const dias = parseInt($("mtTreinoDias").value, 10), min = parseInt($("mtTreinoMin").value, 10);
-  profile.objetivo = $("mtObjetivo").value === "perder" ? "perder" : "manter";
   profile.treino = {
     tipo: $("mtTreinoTipo").value,
     dias: dias >= 0 && dias <= 7 ? dias : 0,
@@ -227,30 +253,39 @@ function readTreino() {
 }
 
 function salvarMetaKcal() {
+  limparErroCampo("mtKErro");
   const o = $("mtKOrigem").value;
-  if (o === "nenhuma") { encerrarMeta("kcal"); $("mtKErro").textContent = ""; toast("Meta de calorias removida a partir de hoje."); renderAll(); return; }
-  const r = o === "estimada" ? estimarMetaKcal(Number($("mtKDef").value)) : metaKcalInformada(numIn("mtKValor"), o);
-  $("mtKErro").textContent = r.ok ? "" : r.erro;
-  if (!r.ok) return;
+  if (o === "nenhuma") { encerrarMeta("kcal"); toast("Meta de calorias removida a partir de hoje. Os dias anteriores mantêm a meta da época."); renderAll(); return; }
+  let r;
+  if (o === "estimada") r = estimarMetaKcal(Number($("mtKDef").value));
+  else {
+    const v = parseNumBR($("mtKValor").value);
+    r = Number.isNaN(v) ? erro("Use só números, por exemplo 2000.") : metaKcalInformada(v, o);
+  }
+  if (!r.ok) { mostrarErroCampo("mtKErro", r.erro, o === "estimada" ? null : "mtKValor"); return; }
   definirMeta(r.meta);
   if (days[TODAY]) saveDay(TODAY);
-  toast("Meta de calorias salva (vale a partir de hoje).");
+  toast(`Meta de calorias salva: ${fmt(r.meta.valor)} kcal a partir de hoje.`);
   renderAll();
 }
 
 function salvarMetaProteina() {
+  limparErroCampo("mtPErro");
   const c = $("mtPCrit").value;
-  if (c === "nenhuma") { encerrarMeta("proteina"); $("mtPErro").textContent = ""; toast("Meta de proteína removida a partir de hoje."); renderAll(); return; }
-  const r = c === "profissional" ? metaProteinaInformada(numIn("mtPValor")) : estimarMetaProteina(c);
-  $("mtPErro").textContent = r.ok ? "" : r.erro;
-  if (!r.ok) return;
+  if (c === "nenhuma") { encerrarMeta("proteina"); toast("Meta de proteína removida a partir de hoje."); renderAll(); return; }
+  let r;
+  if (c === "profissional") {
+    const v = parseNumBR($("mtPValor").value);
+    r = Number.isNaN(v) ? erro("Use só números, por exemplo 90.") : metaProteinaInformada(v);
+  } else r = estimarMetaProteina(c);
+  if (!r.ok) { mostrarErroCampo("mtPErro", r.erro, c === "profissional" ? "mtPValor" : null); return; }
   definirMeta(r.meta);
-  toast("Meta de proteína salva (vale a partir de hoje).");
+  toast(`Meta de proteína salva: ${fmt1(r.meta.valor)} g a partir de hoje.`);
   renderAll();
 }
 
 function initMetasForm() {
-  ["mtObjetivo", "mtTreinoTipo", "mtTreinoDias", "mtTreinoMin", "mtTreinoInt"].forEach(id => $(id).addEventListener("change", readTreino));
+  ["mtTreinoTipo", "mtTreinoDias", "mtTreinoMin", "mtTreinoInt"].forEach(id => $(id).addEventListener("change", readTreino));
   ["mtKOrigem", "mtPCrit"].forEach(id => $(id).addEventListener("change", updateMetaFields));
   $("mtKSalvar").onclick = salvarMetaKcal;
   $("mtPSalvar").onclick = salvarMetaProteina;
