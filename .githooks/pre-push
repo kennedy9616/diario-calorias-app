@@ -1,0 +1,7 @@
+#!/bin/sh
+# Bloqueia o push se os testes falharem.
+# Ativar uma vez por clone: git config core.hooksPath .githooks
+sh "$(git rev-parse --show-toplevel)/tools/run-tests.sh" || {
+  echo "Push bloqueado: testes falharam." >&2
+  exit 1
+}

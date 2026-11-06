@@ -4,6 +4,9 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 
 ## [Não lançado]
 
+### Adicionado
+- Testes de regressão automatizados (`tests/`, `node:test`), obrigatórios no CI e nos hooks de merge/push (`.githooks`).
+
 ## [1.1.0] - 2026-11-05
 
 ### Adicionado
