@@ -17,6 +17,21 @@ const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate(
 const fromKey = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
 const addDays = (k, n) => { const d = fromKey(k); d.setDate(d.getDate() + n); return keyOf(d); };
 
+// número digitado no formato brasileiro ("72,5" ou "72.5"). Vazio → null; inválido → NaN.
+function parseNumBR(v) {
+  const t = String(v == null ? "" : v).trim().replace(/\s+/g, "");
+  if (t === "") return null;
+  if (!/^-?\d+([.,]\d+)?$/.test(t)) return NaN;
+  return Number(t.replace(",", "."));
+}
+
+// diferença em dias entre duas datas "AAAA-MM-DD" (b − a), contando pelo calendário local
+const diasEntre = (a, b) => Math.round((fromKey(b) - fromKey(a)) / 864e5);
+// "AAAA-MM-DD" do instante t (hora local), e o instante do dia k no horário h:m
+const keyOfT = t => keyOf(new Date(t));
+const tNoDia = (k, h, m) => { const d = fromKey(k); d.setHours(h, m, 0, 0); return d.getTime(); };
+const horaDe = t => { const d = new Date(t); return pad(d.getHours()) + ":" + pad(d.getMinutes()); };
+
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const clone = o => JSON.parse(JSON.stringify(o));
 const errMsg = e => String((e && (e.name || e.code || e.message)) || "erro desconhecido").slice(0, 60);
@@ -34,7 +49,7 @@ function escapeHtml(t) {
   return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
 
-// aviso flutuante na parte de baixo da tela
+// aviso flutuante na parte de baixo da tela (anunciado por leitores de tela, sem tirar o foco)
 function toast(msg, ms = 2600) {
   const t = $("toast");
   t.textContent = msg;

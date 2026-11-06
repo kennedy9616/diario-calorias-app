@@ -1,15 +1,27 @@
 /* ==========================================================
-   Corpo: histórico de peso e medidas, tendência e TMB
-   - Várias pesagens no mesmo dia viram a média do dia (regra fixa).
-   - Tendência = média dos dias com pesagem nos últimos 7 dias.
-   - A TMB passa a usar a tendência quando há pesagens em pelo menos
-     3 desses 7 dias; antes disso, usa o peso de "Meus dados".
-     Uma pesagem isolada nunca muda o cálculo.
+   Corpo: histórico de peso e medidas, peso atual e TMB
+   Regras (iguais em todo o app):
+   - Mesma data com várias pesagens: vale a média das pesagens do dia.
+   - Peso atual = peso do dia mais recente com pesagem (pela data da
+     medição, não pela ordem em que foi digitada). Uma medição antiga
+     incluída depois não substitui o peso atual.
+   - Peso usado nos cálculos (referência):
+       1) média dos dias com pesagem nos últimos 7 dias, quando há
+          pesagens em pelo menos 3 desses dias;
+       2) senão, o peso atual (última pesagem até aquele dia);
+       3) sem pesagens, o peso informado no cadastro antigo (versão ≤ 1.2).
+   - Editar ou registrar um peso nunca apaga as medições anteriores.
    ========================================================== */
 
-const TMB_METODO = { nome: "Mifflin-St Jeor", versao: "1.0", fonte_url: "https://pubmed.ncbi.nlm.nih.gov/2305711/" };
+const TMB_METODO = { nome: "Mifflin-St Jeor", versao: "1.1", fonte_url: "https://pubmed.ncbi.nlm.nih.gov/2305711/" };
 const TENDENCIA_DIAS = 7;
 const TENDENCIA_MIN_DIAS = 3;
+const PESO_METODO_ROTULO = {
+  tendencia_7d: "média dos últimos 7 dias",
+  ultima_pesagem: "última pesagem",
+  manual: "informado no cadastro (sem data)",
+  sem_dado: "sem peso registrado"
+};
 
 /* ---------- Validação e lista ---------- */
 function validarMedida(src) {
@@ -27,7 +39,7 @@ function validarMedida(src) {
     const v = m[c.k];
     if (v == null || v === "") { out[c.k] = null; continue; }
     if (!isNum(v) || v < c.min || v > c.max) {
-      return { ok: false, erro: `${c.n}: informe um valor entre ${fmt(c.min)} e ${fmt(c.max)} ${c.u}.` };
+      return { ok: false, erro: `${c.n}: informe um valor entre ${fmt(c.min)} e ${fmt(c.max)} ${c.u}.`, campo: c.k };
     }
     out[c.k] = r1(v);
     algum = true;
@@ -61,12 +73,24 @@ function addMedida(input) {
   return r;
 }
 
+// corrige uma medição (mesmo id e horário de criação); as outras ficam como estão
+function updateMedida(id, input) {
+  const i = medidas.findIndex(m => m.id === id);
+  if (i < 0) return { ok: false, erro: "Medição não encontrada." };
+  const r = validarMedida(Object.assign({}, input, { id, t: medidas[i].t }));
+  if (!r.ok) return r;
+  medidas[i] = r.medida;
+  medidas.sort(ordemMedida);
+  persist();
+  return r;
+}
+
 function removeMedida(id) {
   medidas = medidas.filter(m => m.id !== id);
   persist();
 }
 
-/* ---------- Peso: dia, tendência, variação ---------- */
+/* ---------- Peso: dia, atual, tendência, variação ---------- */
 // [{ data, peso (média do dia), n (pesagens no dia) }] em ordem de data
 function pesosDiarios(lista = medidas) {
   const map = new Map();
@@ -80,6 +104,14 @@ function pesosDiarios(lista = medidas) {
   return [...map.values()]
     .sort((a, b) => (a.data < b.data ? -1 : 1))
     .map(d => ({ data: d.data, peso: d.soma / d.n, n: d.n }));
+}
+
+// peso atual em uma data: dia mais recente com pesagem até "ate"
+function pesoAtual(ate = TODAY, lista = medidas) {
+  const ult = pesosDiarios(lista).filter(d => d.data <= ate).pop();
+  if (ult) return { peso: ult.peso, data: ult.data, n: ult.n, metodo: "ultima_pesagem" };
+  if (naFaixa(profile.peso, FAIXA_PESO)) return { peso: profile.peso, data: null, n: 0, metodo: "manual" };
+  return { peso: null, data: null, n: 0, metodo: "sem_dado" };
 }
 
 function tendenciaDe(diarios, ate) {
@@ -118,8 +150,9 @@ function serieTendencia(ate = TODAY, n = 30) {
 /* ---------- Dados usados no cálculo ---------- */
 function pesoReferencia(ate = TODAY) {
   const t = pesoTendencia(ate);
-  if (t.dias >= TENDENCIA_MIN_DIAS) return { peso: t.peso, metodo: "tendencia_7d", dias: t.dias };
-  return { peso: Number(profile.peso), metodo: "manual", dias: t.dias };
+  if (t.dias >= TENDENCIA_MIN_DIAS) return { peso: t.peso, metodo: "tendencia_7d", dias: t.dias, data: null };
+  const a = pesoAtual(ate);
+  return { peso: a.peso, metodo: a.metodo, dias: t.dias, data: a.data };
 }
 
 // idade completa em anos na data k; null se a data de nascimento for inválida
@@ -133,7 +166,7 @@ function idadeEm(nasc, k) {
 
 function idadeAtual(k = TODAY) {
   const i = idadeEm(profile.nascimento, k);
-  return i == null ? Number(profile.idade) : i;
+  return i == null ? (isNum(profile.idade) ? profile.idade : null) : i;
 }
 
 // perfil com o peso de referência e a idade daquele dia
@@ -145,7 +178,8 @@ function perfilCalculo(k = TODAY) {
 function elegibilidade() {
   const motivos = [];
   const idade = idadeAtual();
-  if (!(idade >= 18)) motivos.push("Menor de 18 anos");
+  if (idade == null) motivos.push("Idade não informada");
+  else if (idade < 18) motivos.push("Menor de 18 anos");
   else if (idade > 64) motivos.push("65 anos ou mais");
   (profile.condicoes || []).forEach(k => {
     const c = CONDICOES.find(x => x.k === k);
@@ -156,25 +190,44 @@ function elegibilidade() {
 
 /* ---------- Tela ---------- */
 const dm = k => { const [, m, d] = k.split("-"); return `${d}/${m}`; };
+const fmtKg = v => (v == null ? "—" : fmt1(v) + " kg");
 
 function renderTmbCard() {
   const p = perfilCalculo();
   const ref = pesoReferencia();
-  const coef = p.sexo === "F" ? "feminino (−161)" : "masculino (+5)";
-  const pesoTxt = ref.metodo === "tendencia_7d"
-    ? `<b>${fmt1(ref.peso)} kg</b> · média de ${ref.dias} dia(s) com pesagem nos últimos 7, recalculada automaticamente`
-    : `<b>${fmt1(ref.peso)} kg</b> · informado em Meus dados. O recálculo automático começa com pesagens em ${TENDENCIA_MIN_DIAS} dos últimos 7 dias (agora: ${ref.dias}).`;
-  $("tmbVal").textContent = fmt(tmb(p)) + " kcal/dia";
-  $("tmbDet").innerHTML = [
-    `Gasto sem exercícios: <b>${fmt(tdee(p))} kcal</b> (TMB × ${fmt1(Number(p.fator))}, rotina sem treinos)`,
-    `Peso de referência: ${pesoTxt}`,
-    `Idade ${fmt(p.idade)} · altura ${fmt(p.altura)} cm · coeficiente ${coef}`,
-    `Método: ${TMB_METODO.nome}, versão ${TMB_METODO.versao} do cálculo`
-  ].map(t => `<li>${t}</li>`).join("");
+  const b = tmb(p);
+  if (b == null) {
+    $("tmbVal").textContent = "—";
+    $("tmbDet").innerHTML = `<li>Para estimar, complete no Perfil: <b>${escapeHtml(dadosFaltando(p).join(", "))}</b>.</li>`
+      + `<li>Método: ${TMB_METODO.nome}</li>`;
+  } else {
+    const coef = p.sexo === "F" ? "feminino (−161)" : "masculino (+5)";
+    const pesoTxt = ref.metodo === "tendencia_7d"
+      ? `<b>${fmt1(ref.peso)} kg</b> · média de ${ref.dias} dia(s) com pesagem nos últimos 7`
+      : ref.metodo === "ultima_pesagem"
+        ? `<b>${fmt1(ref.peso)} kg</b> · última pesagem (${dataBr(ref.data)}). Com pesagens em ${TENDENCIA_MIN_DIAS} dos últimos 7 dias, passa a usar a média (agora: ${ref.dias}).`
+        : `<b>${fmt1(ref.peso)} kg</b> · informado no cadastro. Registre uma pesagem para atualizar.`;
+    $("tmbVal").textContent = fmt(b) + " kcal/dia";
+    $("tmbDet").innerHTML = [
+      `Gasto sem exercícios: <b>${fmt(tdee(p))} kcal</b> (TMB × ${fmt1(Number(p.fator))}, rotina sem treinos)`,
+      `Peso usado: ${pesoTxt}`,
+      `Idade ${fmt(p.idade)} · altura ${fmt(p.altura)} cm · coeficiente ${coef}`,
+      `Método: ${TMB_METODO.nome} (10 × peso + 6,25 × altura − 5 × idade + coeficiente)`
+    ].map(t => `<li>${t}</li>`).join("");
+  }
   const el = elegibilidade();
   $("tmbAviso").classList.toggle("hide", el.ok);
   $("tmbAviso").textContent = el.ok ? "" :
     `Fora do escopo das estimativas automáticas (adultos de 18 a 64 anos, sem condições especiais): ${el.motivos.join(", ")}. Use estes números só com acompanhamento individualizado.`;
+}
+
+function renderPesoAtual() {
+  const a = pesoAtual();
+  $("pesoAtual").textContent = fmtKg(a.peso);
+  $("pesoAtualSub").textContent = a.metodo === "ultima_pesagem"
+    ? `Pesagem de ${dataBr(a.data)}` + (a.n > 1 ? ` (média de ${a.n} pesagens do dia)` : "")
+    : a.metodo === "manual" ? "Informado no cadastro, sem data. Registre uma pesagem para atualizar."
+    : "Nenhuma pesagem registrada.";
 }
 
 function renderPesoStats() {
@@ -188,48 +241,9 @@ function renderPesoStats() {
     : `vs. 7 dias anteriores · cobertura ${v.diasAtual}/7 e ${v.diasAnterior}/7`;
 }
 
-// pontos = pesagem do dia; linha = média de 7 dias. Um só matiz: a forma diferencia as séries.
 function renderPesoChart() {
-  const s = serieTendencia(TODAY, 30);
-  const vals = s.flatMap(x => [x.peso, x.media]).filter(isNum);
-  if (!vals.length) {
-    $("pesoChart").innerHTML = '<div class="empty">Registre seu peso para ver a evolução.</div>';
-    return;
-  }
-  let lo = Math.min(...vals), hi = Math.max(...vals);
-  if (hi - lo < 2) { const c = (hi + lo) / 2; lo = c - 1; hi = c + 1; }
-  lo -= (hi - lo) * 0.1; hi += (hi - lo) * 0.1;
-
-  const W = 330, H = 160, L = 34, R = 10, T = 10, B = 24;
-  const x = i => L + i * (W - L - R) / (s.length - 1);
-  const y = v => T + (hi - v) / (hi - lo) * (H - T - B);
-  const css = getComputedStyle(document.documentElement);
-  const c = n => css.getPropertyValue(n).trim();
-  const font = 'font-family="Manrope, system-ui, sans-serif"';
-
-  let g = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Peso dos últimos 30 dias: pesagens e média de 7 dias">`;
-  [lo + (hi - lo) * 0.1, (lo + hi) / 2, hi - (hi - lo) * 0.1].forEach(v => {
-    g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${c("--line")}" stroke-width="1"/>`;
-    g += `<text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end" font-size="10" fill="${c("--muted")}" ${font}>${fmt1(v)}</text>`;
-  });
-  [0, Math.floor((s.length - 1) / 2), s.length - 1].forEach((i, j) => {
-    g += `<text x="${x(i)}" y="${H - 6}" text-anchor="${["start", "middle", "end"][j]}" font-size="10" fill="${c("--muted")}" ${font}>${dm(s[i].data)}</text>`;
-  });
-  // linha da média, com quebra onde não há dados suficientes
-  let d = "", aberto = false;
-  s.forEach((p, i) => {
-    if (p.media == null) { aberto = false; return; }
-    d += (aberto ? "L" : "M") + x(i).toFixed(1) + " " + y(p.media).toFixed(1);
-    aberto = true;
-  });
-  if (d) g += `<path d="${d}" fill="none" stroke="${c("--accent")}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
-  s.forEach((p, i) => {
-    if (p.peso == null) return;
-    const tip = `${dm(p.data)}: ${fmt1(p.peso)} kg` + (p.media != null ? ` · média 7 dias ${fmt1(p.media)} kg` : "");
-    g += `<g><title>${tip}</title><circle cx="${x(i)}" cy="${y(p.peso)}" r="10" fill="transparent"/>`
-      + `<circle cx="${x(i)}" cy="${y(p.peso)}" r="4" fill="${c("--card")}" stroke="${c("--accent")}" stroke-width="2"/></g>`;
-  });
-  $("pesoChart").innerHTML = g + "</svg>";
+  const ini = addDays(TODAY, -29);
+  graficoPeso($("pesoChart"), pesosDiarios().filter(d => d.data >= ini), { ini, fim: TODAY, media: true });
 }
 
 function medidaTexto(m) {
@@ -240,39 +254,90 @@ function medidaTexto(m) {
 function renderMedidaList() {
   const box = $("medidaList");
   if (!medidas.length) { box.innerHTML = '<div class="empty">Nenhuma medida registrada ainda.</div>'; return; }
-  box.innerHTML = medidas.slice().reverse().map(m =>
-    `<div class="item"><div class="n"><div>${escapeHtml(medidaTexto(m))}</div><small>${fromKey(m.data).toLocaleDateString("pt-BR")}</small></div>`
-    + `<button type="button" class="x" data-del="${escapeHtml(m.id)}" aria-label="Remover">×</button></div>`).join("");
+  box.innerHTML = '<ul class="rlist">' + medidas.slice().reverse().map(m => {
+    const txt = escapeHtml(medidaTexto(m)), data = fromKey(m.data).toLocaleDateString("pt-BR");
+    return `<li class="item"><div class="n"><div>${txt}</div><small>${data}</small></div>`
+      + `<button type="button" class="ib" data-edit="${escapeHtml(m.id)}" aria-label="Editar medição de ${data}">${ICON_EDIT}</button>`
+      + `<button type="button" class="ib del" data-del="${escapeHtml(m.id)}" aria-label="Excluir medição de ${data}">${ICON_DEL}</button></li>`;
+  }).join("") + "</ul>";
 }
 
-function renderHistorico() {
+function renderCorpo() {
   renderTmbCard();
+  renderPesoAtual();
   renderPesoStats();
   renderPesoChart();
   renderMedidaList();
+}
+
+// lê os campos de medida (aceita vírgula). Devolve { input } ou { erro, id } do campo inválido.
+function lerCamposMedida(prefixo = "") {
+  const input = {};
+  for (const c of MEDIDAS_CAMPOS) {
+    const v = parseNumBR($(prefixo + c.id).value);
+    if (Number.isNaN(v)) return { erro: `${c.n}: use só números, por exemplo 72,5.`, id: prefixo + c.id };
+    input[c.k] = v;
+  }
+  return { input };
+}
+
+function aposMudarPeso() {
+  if (days[TODAY]) saveDay(TODAY);   // o dia de hoje guarda a TMB recalculada
+  renderAll();
+}
+
+function editarMedida(id) {
+  const m = medidas.find(x => x.id === id);
+  if (!m) return;
+  abrirEdicao({
+    titulo: "Editar medição", retorno: "medidaList",
+    campos: [{ id: "data", rotulo: "Data", tipo: "date", valor: m.data, max: TODAY }]
+      .concat(MEDIDAS_CAMPOS.map(c => ({ id: c.k, rotulo: `${c.n} (${c.u})`, tipo: "decimal", valor: m[c.k] == null ? "" : String(m[c.k]).replace(".", ",") }))),
+    salvar: v => {
+      const input = { data: v.data };
+      for (const c of MEDIDAS_CAMPOS) {
+        const n = parseNumBR(v[c.k]);
+        if (Number.isNaN(n)) return { erro: `${c.n}: use só números, por exemplo 72,5.`, campo: c.k };
+        input[c.k] = n;
+      }
+      const r = updateMedida(id, input);
+      if (!r.ok) return { erro: r.erro, campo: r.campo };
+      aposMudarPeso();
+      toast("Medição atualizada");
+      return { ok: true };
+    }
+  });
 }
 
 function initBodyForm() {
   $("mData").value = TODAY;
   $("mData").max = TODAY;
   $("addMedida").onclick = () => {
-    const input = { data: $("mData").value || TODAY };
-    MEDIDAS_CAMPOS.forEach(c => { input[c.k] = numIn(c.id); });
-    const r = addMedida(input);
-    $("medidaErro").textContent = r.ok ? "" : r.erro;
-    if (!r.ok) return;
+    const lido = lerCamposMedida();
+    limparErroCampo("medidaErro");
+    if (lido.erro) { mostrarErroCampo("medidaErro", lido.erro, lido.id); return; }
+    const r = addMedida(Object.assign({ data: $("mData").value || TODAY }, lido.input));
+    if (!r.ok) {
+      const c = MEDIDAS_CAMPOS.find(x => x.k === r.campo);
+      mostrarErroCampo("medidaErro", r.erro, c ? c.id : null);
+      return;
+    }
     MEDIDAS_CAMPOS.forEach(c => { $(c.id).value = ""; });
-    if (days[TODAY]) saveDay(TODAY);   // o dia de hoje guarda a TMB recalculada
-    toast("Medidas registradas");
-    renderProfileInfo();
-    renderAll();
+    const a = pesoAtual();
+    toast(r.medida.peso_kg != null && a.data && r.medida.data < a.data
+      ? `Medição de ${dataBr(r.medida.data)} registrada no histórico (o peso atual continua o de ${dataBr(a.data)})`
+      : "Medição registrada");
+    aposMudarPeso();
   };
   $("medidaList").onclick = e => {
-    const b = e.target && e.target.closest ? e.target.closest("[data-del]") : null;
+    const b = e.target && e.target.closest ? e.target.closest("[data-del],[data-edit]") : null;
     if (!b) return;
-    removeMedida(b.dataset.del);
-    if (days[TODAY]) saveDay(TODAY);
-    renderProfileInfo();
-    renderAll();
+    if (b.dataset.edit) { editarMedida(b.dataset.edit); return; }
+    const m = medidas.find(x => x.id === b.dataset.del);
+    if (!m || !confirmar(`Excluir a medição de ${dataBr(m.data)} (${medidaTexto(m)})?`)) return;
+    removeMedida(m.id);
+    toast("Medição excluída");
+    aposMudarPeso();
+    $("medidaList").focus();
   };
 }

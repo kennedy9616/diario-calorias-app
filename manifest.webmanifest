@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Diário de Calorias",
   "short_name": "Calorias",
-  "description": "Registre alimentos e exercícios e acompanhe seu saldo calórico do dia.",
+  "description": "Registre alimentos, água, exercícios e peso, e acompanhe metas e evolução.",
   "lang": "pt-BR",
   "dir": "ltr",
   "start_url": "./",

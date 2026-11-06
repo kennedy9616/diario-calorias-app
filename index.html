@@ -1,50 +1,77 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-versao="1.2.0">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Diário de Calorias</title>
-  <meta name="description" content="Registre alimentos e exercícios e acompanhe seu saldo calórico do dia. Funciona no celular e sem internet.">
+  <meta name="description" content="Registre alimentos, água, exercícios e peso, e acompanhe metas e evolução. Funciona no celular e sem internet.">
+  <meta name="color-scheme" content="dark light">
 
   <!-- Instalação como app (Android e iPhone) -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Calorias">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#141716" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#121514" media="(prefers-color-scheme: dark)">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 
-  <!-- Fonte e estilos -->
+  <!-- Fonte e estilos. ?v= muda a cada versão: o navegador nunca mistura arquivos de publicações diferentes -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=1.2.0">
 
   <!-- Scripts (a ordem importa) -->
-  <script defer src="js/data.js"></script>
-  <script defer src="js/utils.js"></script>
-  <script defer src="js/state.js"></script>
-  <script defer src="js/foods.js"></script>
-  <script defer src="js/storage.js"></script>
-  <script defer src="js/render.js"></script>
-  <script defer src="js/forms.js"></script>
-  <script defer src="js/body.js"></script>
-  <script defer src="js/metas.js"></script>
-  <script defer src="js/analytics.js"></script>
-  <script defer src="js/water.js"></script>
-  <script defer src="js/install.js"></script>
-  <script defer src="js/nav.js"></script>
-  <script defer src="js/app.js"></script>
+  <script defer src="js/data.js?v=1.2.0"></script>
+  <script defer src="js/utils.js?v=1.2.0"></script>
+  <script defer src="js/ui.js?v=1.2.0"></script>
+  <script defer src="js/state.js?v=1.2.0"></script>
+  <script defer src="js/foods.js?v=1.2.0"></script>
+  <script defer src="js/storage.js?v=1.2.0"></script>
+  <script defer src="js/render.js?v=1.2.0"></script>
+  <script defer src="js/forms.js?v=1.2.0"></script>
+  <script defer src="js/body.js?v=1.2.0"></script>
+  <script defer src="js/metas.js?v=1.2.0"></script>
+  <script defer src="js/charts.js?v=1.2.0"></script>
+  <script defer src="js/analytics.js?v=1.2.0"></script>
+  <script defer src="js/water.js?v=1.2.0"></script>
+  <script defer src="js/install.js?v=1.2.0"></script>
+  <script defer src="js/nav.js?v=1.2.0"></script>
+  <script defer src="js/app.js?v=1.2.0"></script>
 </head>
 <body>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+
+<!-- Navegação principal: barra inferior no celular, coluna lateral em telas largas -->
+<nav class="bnav" id="bnav" aria-label="Seções do app">
+  <div class="brand" aria-hidden="true"><img src="icons/icon-192.png" alt="" width="36" height="36"></div>
+  <ul class="in">
+    <li><a href="#agua" id="nav-agua" data-view="agua">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3.5c-3 4-6 7.3-6 10.6a6 6 0 0 0 12 0c0-3.3-3-6.6-6-10.6z"/><path d="M9 14.5a3 3 0 0 0 3 3"/></svg>
+      <span>Água</span></a></li>
+    <li><a href="#calorias" id="nav-calorias" data-view="calorias">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3c.5 3-2.5 4.6-2.5 7.4a2.5 2.5 0 0 0 5 0c0-.8-.2-1.5-.6-2.1 2.5 1.6 4.1 4 4.1 6.6a6 6 0 0 1-12 0c0-4.6 4.2-7.2 6-11.9z"/></svg>
+      <span>Calorias</span></a></li>
+    <li><a href="#analytics" id="nav-analytics" data-view="analytics">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20h16"/><path d="M7 16v-5M12 16V6M17 16v-8"/></svg>
+      <span>Analytics</span></a></li>
+    <li><a href="#perfil" id="nav-perfil" data-view="perfil">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>
+      <span>Perfil</span></a></li>
+  </ul>
+</nav>
+
 <div class="wrap">
-  <header>
-    <h1>Diário de Calorias</h1>
-    <button type="button" class="status" id="status" aria-haspopup="true">Carregando…</button>
-    <div class="modemenu" id="modeMenu" role="menu">
+  <header class="top">
+    <div class="ttl">
+      <h1>Diário de Calorias</h1>
+      <span class="hello" id="hdrNome"></span>
+    </div>
+    <button type="button" class="status" id="status" aria-haspopup="true" aria-expanded="false" aria-controls="modeMenu">Carregando…</button>
+    <div class="modemenu" id="modeMenu">
       <div class="info" id="mInfo"></div>
       <button type="button" id="mInstall" class="hide"><b>Instalar na tela inicial</b><small>Abre como um app, com ícone próprio, e funciona sem internet.</small></button>
       <button type="button" id="mReconnect" class="hide"><b>Reconectar o arquivo</b><small>O navegador pede sua permissão de novo a cada vez que você abre a página.</small></button>
@@ -53,7 +80,7 @@
       <button type="button" id="mDown"><b>Baixar cópia de segurança</b><small>Baixa um arquivo .json com todos os seus registros.</small></button>
       <button type="button" id="mExport"><b>Exportar alimentos cadastrados</b><small>Baixa os alimentos que você cadastrou (no formato da base de alimentos), para guardar ou sugerir a inclusão no app.</small></button>
     </div>
-    <input type="file" id="fileIn" accept=".json,application/json" class="hide">
+    <input type="file" id="fileIn" accept=".json,application/json" class="hide" aria-label="Arquivo de dados">
   </header>
 
   <!-- Convite para instalar o app -->
@@ -61,335 +88,305 @@
     <img src="icons/icon-192.png" alt="" width="40" height="40">
     <div class="txt"><b>Instale o app</b><small id="installTxt"></small></div>
     <button type="button" class="ibtn hide" id="installBtn">Instalar</button>
-    <button type="button" class="x" id="installClose" aria-label="Fechar">×</button>
+    <button type="button" class="x" id="installClose" aria-label="Fechar convite de instalação">×</button>
   </div>
 
-  <div class="datenav" id="datenav">
-    <button type="button" id="prev" aria-label="Dia anterior">‹</button>
-    <div class="d" id="dateLbl"></div>
-    <button type="button" id="next" aria-label="Próximo dia">›</button>
+  <div class="datenav" id="datenav" role="group" aria-label="Dia mostrado">
+    <button type="button" id="prev" aria-label="Dia anterior"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div class="d" id="dateLbl" aria-live="polite"></div>
+    <button type="button" class="hojebtn hide" id="hoje">Hoje</button>
+    <button type="button" id="next" aria-label="Próximo dia"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg></button>
   </div>
 
-  <!-- ===== Aba Água ===== -->
-  <main id="view-agua" class="view hide">
-  <!-- Registro de água do dia -->
-  <section class="card water">
-    <div class="wtop">
-      <div class="glass" id="aguaGlass"></div>
-      <div class="wnums">
-        <div class="k">Registrado no dia</div>
-        <div class="hero num" id="aguaTotal">—</div>
-        <div class="sub" id="aguaMetaTxt"></div>
-        <div class="sub" id="aguaOutras"></div>
-      </div>
-    </div>
-    <p class="note hide" id="aguaAviso" role="note"></p>
-    <div class="quick" id="aguaQuick" aria-label="Adicionar volume rápido">
-      <button type="button" data-ml="150">+150 ml</button>
-      <button type="button" data-ml="200">+200 ml</button>
-      <button type="button" data-ml="250">+250 ml</button>
-      <button type="button" data-ml="300">+300 ml</button>
-      <button type="button" data-ml="500">+500 ml</button>
-    </div>
-    <div class="row">
-      <div><label for="aguaMl">Outro volume (ml)</label><input id="aguaMl" type="number" inputmode="numeric" min="10" max="3000" placeholder="350"></div>
-      <div><label for="aguaTipo">Bebida</label><select id="aguaTipo"><option value="agua">Água</option><option value="outra">Outra bebida</option></select></div>
-    </div>
-    <div class="preview err" id="aguaErro" role="alert"></div>
-    <button type="button" class="btn" id="aguaAdd">Adicionar</button>
-    <div class="list" id="aguaList"></div>
-    <p class="hint">Os botões rápidos usam a bebida escolhida acima. Volume de outras bebidas não é igual ao seu conteúdo de água. Água dos alimentos: não estimada (a base de alimentos não tem umidade).</p>
-  </section>
+  <div id="conteudo">
 
-  <!-- Últimos 7 dias -->
-  <section class="card chart">
-    <h2>Últimos 7 dias <span>no escopo da meta</span></h2>
-    <div id="aguaSemana" class="chartbox"></div>
-    <div class="legend"><span><i class="def"></i>Registrado</span><span><i class="ln mt"></i>Meta ou limite do dia</span></div>
-  </section>
-
-  <!-- Meta de água -->
-  <section class="card">
-    <details id="aguaMetaBox">
-      <summary>Meta de água <span id="aguaMetaSum"></span></summary>
-      <div class="prof-body">
-        <p class="hint" id="aguaMetaAtual"></p>
-        <button type="button" class="btn sec-btn hide" id="aguaSugestao">Começar com 2 L de água pura (ajustável)</button>
-        <div class="row">
-          <div><label for="aguaMetaValor">ml por dia</label><input id="aguaMetaValor" type="number" inputmode="numeric" min="500" max="6000" placeholder="2000"></div>
-          <div><label for="aguaMetaOrigem">Origem</label>
-            <select id="aguaMetaOrigem"><option value="manual">Eu defino</option><option value="profissional">Profissional de saúde</option><option value="nenhuma">Sem meta</option></select></div>
-        </div>
-        <div class="row">
-          <div><label for="aguaMetaEscopo">Conta</label>
-            <select id="aguaMetaEscopo"><option value="agua_pura">Só água pura</option><option value="bebidas_total">Todas as bebidas</option></select></div>
-          <div><label for="aguaMetaSentido">Tipo</label>
-            <select id="aguaMetaSentido"><option value="meta">Meta de hábito</option><option value="limite">Limite diário (restrição)</option></select></div>
-        </div>
-        <div class="preview err" id="aguaMetaErro" role="alert"></div>
-        <button type="button" class="btn sec-btn" id="aguaMetaSalvar">Salvar meta de água</button>
-        <p class="hint" id="aguaRef">Referência <a href="https://www.efsa.europa.eu/en/efsajournal/pub/1459" target="_blank" rel="noopener">EFSA</a> (temperatura e atividade moderadas): cerca de 2,0 L/dia para mulheres e 2,5 L/dia para homens de <b>água total</b>, somando alimentos e todas as bebidas, não só água pura. Calor e treino pedem individualização. A meta do app é um hábito ajustável, não mede seu estado de hidratação. Com restrição de líquidos ou doença renal, siga o limite do seu profissional.</p>
-      </div>
-    </details>
-  </section>
-  </main>
-
-  <!-- ===== Aba Calorias ===== -->
-  <main id="view-calorias" class="view">
-  <!-- Resumo do dia -->
-  <section class="card">
-    <div class="balance none" id="balance">
-      <div class="lbl" id="balLbl">Sem registros neste dia</div>
-      <div class="big num" id="balVal">—</div>
-    </div>
-    <div class="grid">
-      <div class="stat"><div class="k">Consumido</div><div class="v num" id="sCons">0</div></div>
-      <div class="stat"><div class="k">Gasto total</div><div class="v num" id="sGasto">0</div></div>
-      <div class="stat"><div class="k">Basal (TMB)</div><div class="v num" id="sTmb">0</div></div>
-      <div class="stat"><div class="k">Exercícios</div><div class="v num" id="sEx">0</div></div>
-    </div>
-    <div class="macros">
-      <div>Carboidratos<br><b class="num" id="sCarb">0 g</b></div>
-      <div>Proteínas<br><b class="num" id="sProt">0 g</b></div>
-      <div>Gorduras<br><b class="num" id="sGord">0 g</b></div>
-    </div>
-    <div class="micro num" id="sMicro"></div>
-    <div class="micro-hint hide" id="sHint">≥ = soma parcial: alguns alimentos não têm esse dado na fonte. — = nenhum tem.</div>
-    <div id="metaBox" class="hide">
-      <div class="bar" id="metaBar"><i id="metaFill"></i></div>
-      <div class="barlbl"><span id="metaTxt"></span><span id="metaRest"></span></div>
-    </div>
-    <label class="chk completo"><input type="checkbox" id="diaCompleto"> Registrei tudo o que comi neste dia</label>
-  </section>
-
-  <!-- Registro de alimentos e exercícios -->
-  <section class="card">
-    <div class="tabs">
-      <button type="button" class="on" data-tab="food">Alimentação</button>
-      <button type="button" data-tab="ex">Exercícios</button>
-    </div>
-
-    <div id="tab-food">
-      <div class="field">
-        <label for="foodName">Alimento</label>
-        <input id="foodName" autocomplete="off" placeholder="Ex.: arroz, frango, banana…">
-        <div class="sugg" id="sugg"></div>
-      </div>
-      <div class="custom" id="customBox">
-        <p>Alimento fora da lista. Informe os valores em 100 g (veja no rótulo). Ele fica salvo para as próximas vezes, no formato da base de alimentos.</p>
-        <div class="row">
-          <div><label for="cKcal">kcal em 100 g</label><input id="cKcal" type="number" inputmode="decimal" min="0" max="950"></div>
-          <div><label for="cCarb">Carboidratos (g)</label><input id="cCarb" type="number" inputmode="decimal" min="0" max="100" placeholder="opcional"></div>
-        </div>
-        <div class="row">
-          <div><label for="cProt">Proteínas (g)</label><input id="cProt" type="number" inputmode="decimal" min="0" max="100" placeholder="opcional"></div>
-          <div><label for="cGord">Gorduras (g)</label><input id="cGord" type="number" inputmode="decimal" min="0" max="100" placeholder="opcional"></div>
+  <!-- ===== Água ===== -->
+  <main id="view-agua" class="view hide" aria-labelledby="tAgua">
+    <section class="card water span2">
+      <h2 id="tAgua">Água</h2>
+      <div class="whero">
+        <figure class="silhueta" id="aguaFig"></figure>
+        <div class="wnums">
+          <div class="k" id="aguaTotalLbl">Consumido hoje</div>
+          <div class="hero" id="aguaTotal" aria-live="polite">0 ml</div>
+          <div class="sub" id="aguaMetaTxt"></div>
+          <div class="pct" id="aguaPct"></div>
+          <div class="sub" id="aguaRestante"></div>
+          <a href="#perfil" class="linkbtn hide" id="aguaMetaLink">Definir meta no Perfil</a>
+          <div class="sub" id="aguaOutras"></div>
         </div>
       </div>
-      <div class="row">
-        <div class="w2"><label for="qty">Quantidade</label><input id="qty" type="number" inputmode="decimal" min="0" step="any" placeholder="150"></div>
-        <div><label for="unit">Unidade</label>
-          <select id="unit"><option value="g">g</option><option value="kg">kg</option><option value="ml">ml (≈ g)</option></select></div>
+      <div class="wacoes">
+      <p class="note hide" id="aguaAviso" role="note"></p>
+      <p class="hint center">A silhueta mostra o progresso da <b>meta diária</b>, não o nível de hidratação do corpo.</p>
+      <button type="button" class="cup" id="aguaCopo">
+        <svg class="cup-ico" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M11 9h26l-3 31a3 3 0 0 1-3 2.7H17a3 3 0 0 1-3-2.7z"/><path class="cup-agua" d="M13.4 21h21.2l-1.8 18.5a1.6 1.6 0 0 1-1.6 1.4H16.8a1.6 1.6 0 0 1-1.6-1.4z"/></svg>
+        <span class="cup-txt"><b id="aguaCopoVol">+250 ml</b><small id="aguaCopoAtual">Cada toque adiciona 250 ml de água.</small></span>
+      </button>
+      <div class="undo">
+        <span id="aguaUltimo" aria-live="polite">Nada para desfazer.</span>
+        <button type="button" class="btn ghost small" id="aguaDesfazer" disabled>Desfazer</button>
       </div>
-      <div class="field">
-        <label for="meal">Refeição</label>
-        <select id="meal">
-          <option>Café da manhã</option><option>Lanche da manhã</option><option>Almoço</option>
-          <option>Lanche da tarde</option><option>Jantar</option><option>Ceia</option>
-        </select>
       </div>
-      <div class="preview" id="foodPrev"></div>
-      <details class="nutri hide" id="foodNutri">
-        <summary>Informação nutricional <span id="nutriQty"></span></summary>
-        <table id="nutriTable"></table>
-        <p class="hint" id="nutriSrc"></p>
+    </section>
+
+    <section class="card">
+      <h2>Tamanho do copo</h2>
+      <div class="chips" id="aguaCopoOpcoes" role="group" aria-label="Volume adicionado por toque">
+        <button type="button" data-copo="150" aria-pressed="false">150 ml</button>
+        <button type="button" data-copo="200" aria-pressed="false">200 ml</button>
+        <button type="button" data-copo="250" aria-pressed="false">250 ml</button>
+        <button type="button" data-copo="300" aria-pressed="false">300 ml</button>
+        <button type="button" data-copo="500" aria-pressed="false">500 ml</button>
+      </div>
+      <div class="row end">
+        <div><label for="aguaCopoMl">Outro volume (ml)</label><input id="aguaCopoMl" type="text" inputmode="numeric" autocomplete="off" placeholder="Ex.: 350"></div>
+        <div class="fit"><button type="button" class="btn sec" id="aguaCopoSalvar">Usar este volume</button></div>
+      </div>
+      <p class="field-err" id="aguaCopoErro" role="alert"></p>
+      <div class="field"><label for="aguaTipo">O copo registra</label>
+        <select id="aguaTipo"><option value="agua">Água</option><option value="outra">Outra bebida</option></select></div>
+      <p class="hint">De 50 a 1.000 ml. Mudar o copo vale para os próximos toques; os registros já feitos guardam o próprio volume.</p>
+    </section>
+
+    <section class="card">
+      <h2>Registros do dia</h2>
+      <div class="list" id="aguaList" tabindex="-1"></div>
+      <details class="more">
+        <summary>Registrar outro volume uma vez</summary>
+        <div class="row end">
+          <div><label for="aguaMl">Volume (ml)</label><input id="aguaMl" type="text" inputmode="numeric" autocomplete="off" placeholder="Ex.: 350"></div>
+          <div><label for="aguaMlTipo">Bebida</label><select id="aguaMlTipo"><option value="agua">Água</option><option value="outra">Outra bebida</option></select></div>
+        </div>
+        <p class="field-err" id="aguaErro" role="alert"></p>
+        <button type="button" class="btn sec" id="aguaAdd">Registrar</button>
+        <p class="hint">Volume de outras bebidas não é igual ao seu conteúdo de água. Água dos alimentos: não estimada (a base de alimentos não tem umidade).</p>
       </details>
-      <button type="button" class="btn" id="addFood" disabled>Adicionar alimento</button>
-      <div class="list" id="foodList"></div>
-    </div>
+    </section>
 
-    <div id="tab-ex" class="hide">
-      <div class="field">
-        <label for="exType">Atividade</label>
-        <select id="exType"></select>
-      </div>
-      <div class="row">
-        <div><label for="exInt">Intensidade</label>
-          <select id="exInt"><option value="0">Leve</option><option value="1" selected>Moderada</option><option value="2">Intensa</option></select></div>
-        <div><label for="exMin">Tempo (min)</label><input id="exMin" type="number" inputmode="numeric" min="0" placeholder="40"></div>
-      </div>
-      <div class="hint" id="exDesc"></div>
-      <div class="preview" id="exPrev"></div>
-      <button type="button" class="btn" id="addEx" disabled>Adicionar exercício</button>
-      <div class="list" id="exList"></div>
-    </div>
-  </section>
-
+    <section class="card chart">
+      <h2>Últimos 7 dias <span>no escopo da meta</span></h2>
+      <div id="aguaSemana" class="chartbox"></div>
+      <div class="legend"><span><i class="sw water"></i>Registrado</span><span><i class="ln"></i>Meta do dia</span><span><i class="nd"></i>Sem registro</span></div>
+    </section>
   </main>
 
-  <!-- ===== Aba Analytics ===== -->
-  <main id="view-analytics" class="view hide">
-  <!-- Resumo analítico do dia -->
-  <section class="card">
-    <h2>Resumo do dia <span>registrado</span></h2>
-    <div class="grid">
-      <div class="stat"><div class="k">Consumo</div><div class="v num" id="anCons">—</div><div class="sub" id="anConsSub"></div></div>
-      <div class="stat"><div class="k">Diferença da meta</div><div class="v num" id="anDif">—</div><div class="sub" id="anDifSub"></div></div>
-      <div class="stat"><div class="k">Déficit estimado</div><div class="v num" id="anDef">—</div><div class="sub" id="anDefSub"></div></div>
-      <div class="stat"><div class="k">Proteína</div><div class="v num" id="anProt">—</div><div class="sub" id="anProtSub"></div></div>
-    </div>
-    <div class="bar" aria-hidden="true"><i id="anProtFill"></i></div>
-    <div class="barlbl"><span>Proteína em relação à meta</span></div>
-    <table class="ntab" id="anNutri"></table>
-    <p class="hint" id="anVit">Vitaminas: a base de alimentos atual (TACO e USDA compactadas) não traz vitaminas, então o app ainda não as soma. “—” = sem dado na fonte (não é zero); “≥” = soma parcial.</p>
-  </section>
-
-  <!-- Semana -->
-  <section class="card chart">
-    <h2>Semana <span id="anSemLbl"></span></h2>
-    <div id="anChart" class="chartbox"></div>
-    <div class="legend"><span><i class="def"></i>Dia completo</span><span><i class="hol"></i>Parcial</span><span><i class="ln mt"></i>Meta do dia</span></div>
-    <div class="grid an-stats">
-      <div class="stat"><div class="k">Regularidade</div><div class="v num" id="anReg">—</div><div class="sub" id="anRegSub"></div></div>
-      <div class="stat"><div class="k">Consumo médio</div><div class="v num" id="anMedia">—</div><div class="sub" id="anMediaSub"></div></div>
-      <div class="stat"><div class="k">Atividade</div><div class="v num" id="anAtiv">—</div><div class="sub" id="anAtivSub"></div></div>
-      <div class="stat"><div class="k">Força</div><div class="v num" id="anForca">—</div><div class="sub" id="anForcaSub"></div></div>
-    </div>
-    <details class="tbl"><summary>Ver em tabela</summary><table class="ntab" id="anTabela"></table></details>
-  </section>
-
-  <!-- Últimos 7 dias -->
-  <section class="card chart">
-    <h2>Saldo estimado <span>só dias completos</span></h2>
-    <div id="chart"></div>
-    <div class="legend"><span><i class="def"></i>Déficit</span><span><i class="sur"></i>Superávit</span></div>
-  </section>
-
-  <!-- Metas e objetivo -->
-  <section class="card">
-    <details id="metasBox">
-      <summary>Metas e objetivo <span id="metasSum"></span></summary>
-      <div class="prof-body">
-        <p class="hint">Metas são estimativas ajustáveis, não prescrição. Valide com nutricionista ou médico. Cada meta vale a partir do dia em que foi salva; os dias anteriores continuam comparados com a meta da época.</p>
-        <div class="row">
-          <div><label for="mtObjetivo">Objetivo</label>
-            <select id="mtObjetivo"><option value="manter">Manter o peso</option><option value="perder">Perder peso</option></select></div>
-          <div><label for="mtTreinoTipo">Treino</label>
-            <select id="mtTreinoTipo"><option value="nenhum">Não treino</option><option value="aerobico">Aeróbico</option><option value="forca">Força</option><option value="misto">Misto</option></select></div>
-        </div>
-        <div class="row">
-          <div><label for="mtTreinoDias">Dias/semana</label><input id="mtTreinoDias" type="number" inputmode="numeric" min="0" max="7"></div>
-          <div><label for="mtTreinoMin">Min/treino</label><input id="mtTreinoMin" type="number" inputmode="numeric" min="0" max="600"></div>
-          <div><label for="mtTreinoInt">Intensidade</label>
-            <select id="mtTreinoInt"><option value="leve">Leve</option><option value="moderada">Moderada</option><option value="vigorosa">Vigorosa</option></select></div>
-        </div>
-        <p class="hint">O treino serve para escolher o critério de proteína. Ele não muda o gasto: os exercícios registrados já são somados à parte.</p>
-
-        <h3 class="sec">Calorias</h3>
-        <p class="hint" id="mtKAtual"></p>
-        <div class="row">
-          <div><label for="mtKOrigem">Origem da meta</label>
-            <select id="mtKOrigem"><option value="nenhuma">Sem meta</option><option value="estimada">Estimativa do app</option><option value="profissional">Profissional de saúde</option><option value="manual">Eu defino</option></select></div>
-          <div id="mtKDefBox" class="hide"><label for="mtKDef">Déficit planejado</label>
-            <select id="mtKDef"><option value="0">0% (manter)</option><option value="0.1">10%</option><option value="0.15">15%</option></select></div>
-          <div id="mtKValorBox" class="hide"><label for="mtKValor">kcal/dia</label><input id="mtKValor" type="number" inputmode="numeric" min="500" max="10000"></div>
-        </div>
-        <p class="hint">Estimativa = TMB × rotina × (1 − déficit). 10–15% é uma proposta inicial do app, não recomendação universal. O app não promete perda linear nem data para atingir um peso.</p>
-        <div class="preview err" id="mtKErro" role="alert"></div>
-        <button type="button" class="btn sec-btn" id="mtKSalvar">Salvar meta de calorias</button>
-
-        <h3 class="sec">Proteína</h3>
-        <p class="hint" id="mtPAtual"></p>
-        <div class="row">
-          <div class="w2"><label for="mtPCrit">Critério</label>
-            <select id="mtPCrit">
-              <option value="nenhuma">Sem meta</option>
-              <option value="efsa">0,83 g/kg · EFSA, referência populacional</option>
-              <option value="issn14">1,4 g/kg · ISSN, treino regular</option>
-              <option value="issn16">1,6 g/kg · ISSN, treino regular</option>
-              <option value="issn18">1,8 g/kg · ISSN, treino regular</option>
-              <option value="issn20">2,0 g/kg · ISSN, treino regular</option>
-              <option value="profissional">Profissional de saúde (g/dia)</option>
-            </select></div>
-          <div id="mtPValorBox" class="hide"><label for="mtPValor">g/dia</label><input id="mtPValor" type="number" inputmode="decimal" min="10" max="400"></div>
-        </div>
-        <p class="hint">Usa o peso de referência (aba Histórico). Referência populacional não é meta de hipertrofia. Com IMC de 30 ou mais, coeficientes altos só com profissional.</p>
-        <div class="preview err" id="mtPErro" role="alert"></div>
-        <button type="button" class="btn sec-btn" id="mtPSalvar">Salvar meta de proteína</button>
+  <!-- ===== Calorias ===== -->
+  <main id="view-calorias" class="view" aria-labelledby="tCal">
+    <section class="card">
+      <h2 id="tCal">Resumo do dia</h2>
+      <div class="balance none" id="balance">
+        <div class="lbl" id="balLbl">Sem registros neste dia</div>
+        <div class="big num" id="balVal">—</div>
       </div>
-    </details>
-  </section>
+      <div class="grid">
+        <div class="stat"><div class="k">Consumido</div><div class="v num" id="sCons">0</div></div>
+        <div class="stat"><div class="k">Gasto estimado</div><div class="v num" id="sGasto">0</div></div>
+        <div class="stat"><div class="k">Basal (TMB)</div><div class="v num" id="sTmb">0</div></div>
+        <div class="stat"><div class="k">Exercícios</div><div class="v num" id="sEx">0</div></div>
+      </div>
+      <p class="note hide" id="sPerfil">Gasto e saldo precisam de peso, altura, idade e sexo. <a href="#perfil">Completar o Perfil</a></p>
+      <div class="macros">
+        <div>Carboidratos<br><b class="num" id="sCarb">0 g</b></div>
+        <div>Proteínas<br><b class="num" id="sProt">0 g</b></div>
+        <div>Gorduras<br><b class="num" id="sGord">0 g</b></div>
+      </div>
+      <div class="micro num" id="sMicro"></div>
+      <div class="micro-hint hide" id="sHint">≥ = soma parcial: alguns alimentos não têm esse dado na fonte. — = nenhum tem.</div>
+      <div id="metaBox" class="hide">
+        <div class="bar" id="metaBar"><i id="metaFill"></i></div>
+        <div class="barlbl"><span id="metaTxt"></span><span id="metaRest"></span></div>
+      </div>
+      <label class="chk completo"><input type="checkbox" id="diaCompleto"> Registrei tudo o que comi neste dia</label>
+      <details class="more">
+        <summary>Como o saldo é calculado</summary>
+        <ul class="facts">
+          <li><b>Consumo</b>: soma das calorias dos alimentos registrados no dia.</li>
+          <li><b>Gasto estimado</b>: TMB × rotina (sem treinos) + exercícios registrados, contando só o gasto <i>extra</i> de cada exercício (MET − 1), para não somar o basal duas vezes.</li>
+          <li><b>Saldo</b> = consumo − gasto estimado. Negativo = déficit estimado; positivo = superávit. Só aparece como déficit ou superávit em dia marcado como completo.</li>
+          <li><b>Meta</b>: meta de consumo vigente no dia (definida no Perfil). Mudar a meta não altera os dias anteriores.</li>
+        </ul>
+      </details>
+    </section>
 
+    <section class="card">
+      <div class="tabs" role="tablist" aria-label="Tipo de registro">
+        <button type="button" role="tab" class="on" id="tabBtn-food" aria-selected="true" aria-controls="tab-food" tabindex="0">Alimentação</button>
+        <button type="button" role="tab" id="tabBtn-ex" aria-selected="false" aria-controls="tab-ex" tabindex="-1">Exercícios</button>
+      </div>
+
+      <div id="tab-food" role="tabpanel" aria-labelledby="tabBtn-food">
+        <div class="field">
+          <label for="foodName">Alimento</label>
+          <input id="foodName" autocomplete="off" placeholder="Ex.: arroz, frango, banana…">
+          <div class="sugg" id="sugg"></div>
+        </div>
+        <div class="custom" id="customBox">
+          <p>Alimento fora da lista. Informe os valores em 100 g (veja no rótulo). Ele fica salvo para as próximas vezes, no formato da base de alimentos.</p>
+          <div class="row">
+            <div><label for="cKcal">kcal em 100 g</label><input id="cKcal" type="text" inputmode="decimal"></div>
+            <div><label for="cCarb">Carboidratos (g)</label><input id="cCarb" type="text" inputmode="decimal" placeholder="opcional"></div>
+          </div>
+          <div class="row">
+            <div><label for="cProt">Proteínas (g)</label><input id="cProt" type="text" inputmode="decimal" placeholder="opcional"></div>
+            <div><label for="cGord">Gorduras (g)</label><input id="cGord" type="text" inputmode="decimal" placeholder="opcional"></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="w2"><label for="qty">Quantidade</label><input id="qty" type="text" inputmode="decimal" placeholder="150"></div>
+          <div><label for="unit">Unidade</label>
+            <select id="unit"><option value="g">g</option><option value="kg">kg</option><option value="ml">ml (≈ g)</option></select></div>
+        </div>
+        <div class="field">
+          <label for="meal">Refeição</label>
+          <select id="meal">
+            <option>Café da manhã</option><option>Lanche da manhã</option><option>Almoço</option>
+            <option>Lanche da tarde</option><option>Jantar</option><option>Ceia</option>
+          </select>
+        </div>
+        <div class="preview" id="foodPrev" aria-live="polite"></div>
+        <details class="nutri hide" id="foodNutri">
+          <summary>Informação nutricional <span id="nutriQty"></span></summary>
+          <table id="nutriTable"></table>
+          <p class="hint" id="nutriSrc"></p>
+        </details>
+        <button type="button" class="btn" id="addFood" disabled>Adicionar alimento</button>
+        <div class="list" id="foodList" tabindex="-1"></div>
+      </div>
+
+      <div id="tab-ex" class="hide" role="tabpanel" aria-labelledby="tabBtn-ex">
+        <div class="field">
+          <label for="exType">Atividade</label>
+          <select id="exType"></select>
+        </div>
+        <div class="row">
+          <div><label for="exInt">Intensidade</label>
+            <select id="exInt"><option value="0">Leve</option><option value="1" selected>Moderada</option><option value="2">Intensa</option></select></div>
+          <div><label for="exMin">Tempo (min)</label><input id="exMin" type="text" inputmode="numeric" placeholder="40"></div>
+        </div>
+        <div class="hint" id="exDesc"></div>
+        <div class="preview" id="exPrev" aria-live="polite"></div>
+        <button type="button" class="btn" id="addEx" disabled>Adicionar exercício</button>
+        <div class="list" id="exList" tabindex="-1"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <details>
+        <summary>Nutrientes e metas do dia</summary>
+        <div class="prof-body">
+          <div class="grid">
+            <div class="stat"><div class="k">Consumo</div><div class="v num" id="anCons">—</div><div class="sub" id="anConsSub"></div></div>
+            <div class="stat"><div class="k">Diferença da meta</div><div class="v num" id="anDif">—</div><div class="sub" id="anDifSub"></div></div>
+            <div class="stat"><div class="k">Déficit estimado</div><div class="v num" id="anDef">—</div><div class="sub" id="anDefSub"></div></div>
+            <div class="stat"><div class="k">Proteína</div><div class="v num" id="anProt">—</div><div class="sub" id="anProtSub"></div></div>
+          </div>
+          <div class="bar" aria-hidden="true"><i id="anProtFill"></i></div>
+          <div class="barlbl"><span>Proteína em relação à meta</span></div>
+          <table class="ntab" id="anNutri"></table>
+          <p class="hint" id="anVit">Vitaminas: a base de alimentos atual (TACO e USDA compactadas) não traz vitaminas, então o app ainda não as soma. “—” = sem dado na fonte (não é zero); “≥” = soma parcial.</p>
+        </div>
+      </details>
+    </section>
+
+    <section class="card chart">
+      <h2>Saldo estimado <span>7 dias, só dias completos</span></h2>
+      <div id="chart" class="chartbox"></div>
+      <div class="legend"><span><i class="sw def"></i>Déficit</span><span><i class="sw sur"></i>Superávit</span></div>
+    </section>
   </main>
 
-  <!-- ===== Aba Histórico ===== -->
-  <main id="view-historico" class="view hide">
-  <!-- Taxa metabólica basal -->
-  <section class="card" id="tmbCard">
-    <h2>Taxa metabólica basal <span>em repouso</span></h2>
-    <div class="hero num" id="tmbVal">—</div>
-    <ul class="facts" id="tmbDet"></ul>
-    <p class="note hide" id="tmbAviso" role="note"></p>
-    <p class="hint">Estimativa ajustável, não prescrição: metas e ajustes vêm da sua equipe de saúde. <a href="https://pubmed.ncbi.nlm.nih.gov/2305711/" target="_blank" rel="noopener">Equação de Mifflin-St Jeor</a>.</p>
-  </section>
+  <!-- ===== Analytics ===== -->
+  <main id="view-analytics" class="view hide" aria-labelledby="tAn">
+    <section class="card span2 filtros">
+      <h2 id="tAn">Analytics</h2>
+      <div class="seg" id="anPeriodo" role="group" aria-label="Período analisado">
+        <button type="button" data-p="hoje" aria-pressed="false">Hoje</button>
+        <button type="button" data-p="7d" aria-pressed="true">7 dias</button>
+        <button type="button" data-p="30d" aria-pressed="false">30 dias</button>
+        <button type="button" data-p="90d" aria-pressed="false">90 dias</button>
+        <button type="button" data-p="custom" aria-pressed="false">Personalizado</button>
+      </div>
+      <div class="row end hide" id="anCustom">
+        <div><label for="anIni">De</label><input id="anIni" type="date"></div>
+        <div><label for="anFim">Até</label><input id="anFim" type="date"></div>
+        <div class="fit"><button type="button" class="btn sec" id="anAplicar">Aplicar</button></div>
+      </div>
+      <p class="field-err" id="anPerErro" role="alert"></p>
+      <p class="hint" id="anPerTxt" aria-live="polite"></p>
+    </section>
 
-  <!-- Registro de peso e medidas -->
-  <section class="card">
-    <h2>Registrar peso e medidas</h2>
-    <div class="row">
-      <div><label for="mData">Data</label><input id="mData" type="date"></div>
-      <div><label for="mPeso">Peso (kg)</label><input id="mPeso" type="number" inputmode="decimal" step="0.1" min="20" max="400"></div>
-    </div>
-    <div class="row">
-      <div><label for="mCintura">Cintura (cm)</label><input id="mCintura" type="number" inputmode="decimal" step="0.1" min="30" max="300"></div>
-      <div><label for="mQuadril">Quadril (cm)</label><input id="mQuadril" type="number" inputmode="decimal" step="0.1" min="30" max="300"></div>
-    </div>
-    <div class="row">
-      <div><label for="mBraco">Braço (cm)</label><input id="mBraco" type="number" inputmode="decimal" step="0.1" min="10" max="100"></div>
-      <div><label for="mCoxa">Coxa (cm)</label><input id="mCoxa" type="number" inputmode="decimal" step="0.1" min="20" max="150"></div>
-      <div><label for="mGordura">Gordura (%)</label><input id="mGordura" type="number" inputmode="decimal" step="0.1" min="2" max="75"></div>
-    </div>
-    <p class="hint">Registre o que tiver: todos os campos são opcionais. Pese-se em condições parecidas (ex.: ao acordar). Várias pesagens no mesmo dia contam como a média do dia.</p>
-    <div class="preview err" id="medidaErro" role="alert"></div>
-    <button type="button" class="btn" id="addMedida">Registrar</button>
-  </section>
+    <section class="card span2 empty-state hide" id="anVazio">
+      <h3>Sem registros neste período</h3>
+      <p>Os gráficos usam só o que você registra: dias sem registro não contam como zero. Comece por uma destas seções:</p>
+      <div class="links"><a class="btn sec" href="#agua">Registrar água</a><a class="btn sec" href="#calorias">Registrar alimentação</a><a class="btn sec" href="#perfil">Registrar peso</a></div>
+    </section>
 
-  <!-- Evolução -->
-  <section class="card chart">
-    <h2>Evolução do peso <span>últimos 30 dias</span></h2>
-    <div class="grid">
-      <div class="stat"><div class="k">Tendência (média 7 dias)</div><div class="v num" id="pesoTend">—</div><div class="sub" id="pesoTendSub"></div></div>
-      <div class="stat"><div class="k">Variação semanal</div><div class="v num" id="pesoVar">—</div><div class="sub" id="pesoVarSub"></div></div>
-    </div>
-    <div id="pesoChart" class="chartbox"></div>
-    <div class="legend"><span><i class="pt"></i>Pesagem do dia</span><span><i class="ln"></i>Média de 7 dias</span></div>
-    <div class="list" id="medidaList"></div>
-  </section>
+    <div id="anConteudo" class="vgrid">
+      <section class="card span2">
+        <h2>Indicadores <span>vs. período anterior de mesma duração</span></h2>
+        <div class="grid kpis" id="anKpis"></div>
+      </section>
 
-  <!-- Dados pessoais -->
-  <section class="card">
-    <details id="profBox">
-      <summary>Meus dados <span id="profSum"></span></summary>
-      <div class="prof-body">
+      <section class="card chart">
+        <h2>Água por dia <span>ml, no escopo da meta</span></h2>
+        <div id="anAguaChart" class="chartbox"></div>
+        <div class="legend"><span><i class="sw water"></i>Registrado</span><span><i class="ln"></i>Meta do dia</span><span><i class="nd"></i>Sem registro</span></div>
+        <details class="tbl"><summary>Ver em tabela</summary><table class="ntab" id="anAguaTab"></table></details>
+      </section>
+
+      <section class="card chart">
+        <h2>Calorias por dia <span>kcal consumidas</span></h2>
+        <div id="anKcalChart" class="chartbox"></div>
+        <div class="legend"><span><i class="sw kcal"></i>Dia completo</span><span><i class="sw kcal fraco"></i>Parcial</span><span><i class="ln"></i>Meta do dia</span><span><i class="nd"></i>Sem registro</span></div>
+        <details class="tbl"><summary>Ver em tabela</summary><table class="ntab" id="anKcalTab"></table></details>
+      </section>
+
+      <section class="card chart">
+        <h2>Peso <span>kg, medições registradas</span></h2>
+        <div id="anPesoChart" class="chartbox"></div>
+        <p class="hint">Cada ponto é a média das pesagens daquele dia; dias sem pesagem não são preenchidos.</p>
+      </section>
+
+      <section class="card chart">
+        <h2>Macronutrientes <span>% da energia no período</span></h2>
+        <div id="anMacros" class="chartbox"></div>
+        <p class="hint" id="anMacrosNota"></p>
+      </section>
+
+      <section class="card span2">
+        <h2>Consistência e evolução</h2>
+        <ul class="facts" id="anEvolucao"></ul>
+        <p class="hint">Descrição dos registros, sem pontuação de saúde. Metas são estimativas ajustáveis, não prescrição.</p>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===== Perfil ===== -->
+  <main id="view-perfil" class="view hide" aria-labelledby="tPerfil">
+    <section class="card">
+      <h2 id="tPerfil">Seus dados <span id="profSum"></span></h2>
+      <form id="perfilForm" novalidate>
+        <div class="field"><label for="pNome">Nome</label><input id="pNome" type="text" autocomplete="given-name" maxlength="60" placeholder="Como quer ser chamado(a)"></div>
         <div class="row">
-          <div><label for="pPeso">Peso de referência (kg)</label><input id="pPeso" type="number" inputmode="decimal" step="0.1"></div>
-          <div><label for="pAlt">Altura (cm)</label><input id="pAlt" type="number" inputmode="numeric"></div>
-          <div><label for="pIdade">Idade</label><input id="pIdade" type="number" inputmode="numeric"></div>
+          <div><label for="pNasc">Data de nascimento</label><input id="pNasc" type="date"></div>
+          <div><label for="pIdade">ou idade</label><input id="pIdade" type="text" inputmode="numeric" placeholder="anos"></div>
         </div>
         <div class="row">
-          <div><label for="pSexo">Sexo (coeficiente da equação)</label><select id="pSexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></div>
-          <div class="w2"><label for="pFator">Rotina fora dos exercícios</label>
-            <select id="pFator">
-              <option value="1.2">Sedentária (×1,2)</option>
-              <option value="1.3">Pouco ativa, em pé às vezes (×1,3)</option>
-              <option value="1.4">Ativa, muito tempo em pé (×1,4)</option>
-            </select></div>
+          <div><label for="pAlt">Altura (cm)</label><input id="pAlt" type="text" inputmode="decimal" placeholder="Ex.: 172"></div>
+          <div><label for="pSexo">Sexo (equações)</label><select id="pSexo"><option value="">Selecione</option><option value="F">Feminino</option><option value="M">Masculino</option></select></div>
         </div>
-        <div class="row">
-          <div><label for="pNasc">Data de nascimento (opcional)</label><input id="pNasc" type="date"></div>
-        </div>
-        <p class="hint">Com a data de nascimento, a idade se atualiza sozinha. A equação tem um coeficiente masculino e um feminino: escolha o seu (o app não deduz pelo nome).</p>
-        <p class="hint">Os exercícios são somados à parte, então escolha a rotina <b>sem</b> contar treinos — senão eles entram duas vezes.</p>
+        <p class="hint">As equações de referência (TMB de Mifflin-St Jeor e água da EFSA) têm valores diferentes por sexo: escolha o coeficiente que se aplica a você. Com a data de nascimento, a idade se atualiza sozinha.</p>
+        <div class="field"><label for="pObjetivo">Objetivo</label>
+          <select id="pObjetivo"><option value="perder">Perder peso</option><option value="manter">Manter o peso</option><option value="ganhar">Ganhar peso</option></select></div>
+        <div class="field"><label for="pFator">Rotina fora dos exercícios (nível de atividade)</label>
+          <select id="pFator">
+            <option value="1.2">Sedentária (×1,2)</option>
+            <option value="1.3">Pouco ativa, em pé às vezes (×1,3)</option>
+            <option value="1.4">Ativa, muito tempo em pé (×1,4)</option>
+          </select></div>
+        <p class="hint">A rotina multiplica a TMB no gasto do dia. Escolha <b>sem</b> contar treinos: os exercícios registrados são somados à parte.</p>
+        <div class="field"><label for="pCopo">Volume padrão do copo (ml)</label><input id="pCopo" type="text" inputmode="numeric" placeholder="250"></div>
         <fieldset class="conds">
           <legend>Condições especiais</legend>
           <label class="chk"><input type="checkbox" id="condGestante"> Gestante</label>
@@ -399,40 +396,159 @@
           <label class="chk"><input type="checkbox" id="condLiquidos"> Restrição de líquidos</label>
           <p class="hint">Com alguma delas, ou fora de 18 a 64 anos, o app não sugere metas automáticas: defina-as com sua equipe de saúde.</p>
         </fieldset>
-        <p class="hint">Metas de calorias e proteína ficam na aba <b>Analytics</b>, com histórico.</p>
-        <p class="hint" id="tmbInfo"></p>
-      </div>
-    </details>
-  </section>
+        <p class="field-err" id="pErro" role="alert"></p>
+        <button type="submit" class="btn" id="pSalvar">Salvar dados</button>
+        <p class="form-msg" id="pMsg" role="status"></p>
+      </form>
+      <p class="hint" id="tmbInfo"></p>
+    </section>
 
+    <section class="card">
+      <h2>Peso e medidas</h2>
+      <div class="stat wide"><div class="k">Peso atual</div><div class="v num" id="pesoAtual">—</div><div class="sub" id="pesoAtualSub"></div></div>
+      <div class="row">
+        <div><label for="mData">Data</label><input id="mData" type="date"></div>
+        <div><label for="mPeso">Peso (kg)</label><input id="mPeso" type="text" inputmode="decimal" placeholder="Ex.: 72,5"></div>
+      </div>
+      <details class="more">
+        <summary>Outras medidas (opcional)</summary>
+        <div class="row">
+          <div><label for="mCintura">Cintura (cm)</label><input id="mCintura" type="text" inputmode="decimal"></div>
+          <div><label for="mQuadril">Quadril (cm)</label><input id="mQuadril" type="text" inputmode="decimal"></div>
+        </div>
+        <div class="row">
+          <div><label for="mBraco">Braço (cm)</label><input id="mBraco" type="text" inputmode="decimal"></div>
+          <div><label for="mCoxa">Coxa (cm)</label><input id="mCoxa" type="text" inputmode="decimal"></div>
+          <div><label for="mGordura">Gordura (%)</label><input id="mGordura" type="text" inputmode="decimal"></div>
+        </div>
+      </details>
+      <p class="hint">Peso atual = a pesagem com a data mais recente (incluir uma data antiga não troca o peso atual). Várias pesagens no mesmo dia contam como a média do dia. Pese-se em condições parecidas (ex.: ao acordar).</p>
+      <p class="field-err" id="medidaErro" role="alert"></p>
+      <button type="button" class="btn" id="addMedida">Registrar medição</button>
+    </section>
+
+    <section class="card chart">
+      <h2>Evolução do peso <span>últimos 30 dias</span></h2>
+      <div class="grid">
+        <div class="stat"><div class="k">Média de 7 dias</div><div class="v num" id="pesoTend">—</div><div class="sub" id="pesoTendSub"></div></div>
+        <div class="stat"><div class="k">Variação semanal</div><div class="v num" id="pesoVar">—</div><div class="sub" id="pesoVarSub"></div></div>
+      </div>
+      <div id="pesoChart" class="chartbox"></div>
+      <div class="legend"><span><i class="pt"></i>Pesagem do dia</span><span><i class="ln muted"></i>Média de 7 dias</span></div>
+      <h3 class="sec">Histórico de medições</h3>
+      <div class="list" id="medidaList" tabindex="-1"></div>
+    </section>
+
+    <section class="card" id="tmbCard">
+      <h2>Taxa metabólica basal <span>em repouso</span></h2>
+      <div class="hero num" id="tmbVal">—</div>
+      <ul class="facts" id="tmbDet"></ul>
+      <p class="note hide" id="tmbAviso" role="note"></p>
+      <p class="hint">Estimativa ajustável, não prescrição: metas e ajustes vêm da sua equipe de saúde. <a href="https://pubmed.ncbi.nlm.nih.gov/2305711/" target="_blank" rel="noopener">Equação de Mifflin-St Jeor</a>.</p>
+    </section>
+
+    <section class="card span2">
+      <h2>Metas</h2>
+      <p class="hint">Metas são estimativas ajustáveis, não prescrição. Cada meta vale a partir do dia em que foi salva; os dias anteriores continuam comparados com a meta da época.</p>
+
+      <details id="metasBox" class="more">
+        <summary>Calorias e proteína <span id="metasSum"></span></summary>
+        <div class="prof-body">
+          <h3 class="sec">Calorias</h3>
+          <p class="hint" id="mtKAtual"></p>
+          <div class="row">
+            <div><label for="mtKOrigem">Origem da meta</label>
+              <select id="mtKOrigem"><option value="nenhuma">Sem meta</option><option value="estimada">Estimativa do app</option><option value="profissional">Profissional de saúde</option><option value="manual">Eu defino</option></select></div>
+            <div id="mtKDefBox" class="hide"><label for="mtKDef">Déficit planejado</label>
+              <select id="mtKDef"><option value="0">0% (manter)</option><option value="0.1">10%</option><option value="0.15">15%</option></select></div>
+            <div id="mtKValorBox" class="hide"><label for="mtKValor">kcal/dia</label><input id="mtKValor" type="text" inputmode="numeric"></div>
+          </div>
+          <p class="hint">Estimativa = TMB × rotina × (1 − déficit). Objetivo atual: <b id="mtObjetivoTxt">manter o peso</b> (muda em “Seus dados”). O déficit de 10–15% só vale para “perder peso” e é proposta inicial do app, não recomendação universal.</p>
+          <p class="hint hide" id="mtKGanhar">Para ganhar peso, o app estima só a manutenção: o acréscimo de calorias deve ser definido com seu profissional (origem “Profissional” ou “Eu defino”).</p>
+          <p class="field-err" id="mtKErro" role="alert"></p>
+          <button type="button" class="btn sec" id="mtKSalvar">Salvar meta de calorias</button>
+
+          <h3 class="sec">Proteína</h3>
+          <p class="hint" id="mtPAtual"></p>
+          <div class="row">
+            <div class="w2"><label for="mtPCrit">Critério</label>
+              <select id="mtPCrit">
+                <option value="nenhuma">Sem meta</option>
+                <option value="efsa">0,83 g/kg · EFSA, referência populacional</option>
+                <option value="issn14">1,4 g/kg · ISSN, treino regular</option>
+                <option value="issn16">1,6 g/kg · ISSN, treino regular</option>
+                <option value="issn18">1,8 g/kg · ISSN, treino regular</option>
+                <option value="issn20">2,0 g/kg · ISSN, treino regular</option>
+                <option value="profissional">Profissional de saúde (g/dia)</option>
+              </select></div>
+            <div id="mtPValorBox" class="hide"><label for="mtPValor">g/dia</label><input id="mtPValor" type="text" inputmode="decimal"></div>
+          </div>
+          <div class="row">
+            <div><label for="mtTreinoTipo">Treino</label>
+              <select id="mtTreinoTipo"><option value="nenhum">Não treino</option><option value="aerobico">Aeróbico</option><option value="forca">Força</option><option value="misto">Misto</option></select></div>
+            <div><label for="mtTreinoDias">Dias/semana</label><input id="mtTreinoDias" type="text" inputmode="numeric"></div>
+            <div><label for="mtTreinoMin">Min/treino</label><input id="mtTreinoMin" type="text" inputmode="numeric"></div>
+          </div>
+          <div class="field"><label for="mtTreinoInt">Intensidade do treino</label>
+            <select id="mtTreinoInt"><option value="leve">Leve</option><option value="moderada">Moderada</option><option value="vigorosa">Vigorosa</option></select></div>
+          <p class="hint">Usa o peso de referência. O treino serve para escolher o critério de proteína; ele não muda o gasto (os exercícios registrados já são somados à parte). Com IMC de 30 ou mais, coeficientes altos só com profissional.</p>
+          <p class="field-err" id="mtPErro" role="alert"></p>
+          <button type="button" class="btn sec" id="mtPSalvar">Salvar meta de proteína</button>
+        </div>
+      </details>
+
+      <details id="aguaMetaBox" class="more">
+        <summary>Água <span id="aguaMetaSum"></span></summary>
+        <div class="prof-body">
+          <p class="hint" id="aguaMetaAtual"></p>
+          <div class="field"><label for="aguaMetaOrigem">Tipo de meta</label>
+            <select id="aguaMetaOrigem">
+              <option value="estimada">Estimada (referência EFSA)</option>
+              <option value="manual">Personalizada (eu defino)</option>
+              <option value="profissional">Do profissional de saúde</option>
+              <option value="nenhuma">Sem meta</option>
+            </select></div>
+          <p class="hint" id="aguaEstimativa"></p>
+          <div id="aguaMetaManual" class="hide">
+            <div class="row">
+              <div><label for="aguaMetaValor">ml por dia</label><input id="aguaMetaValor" type="text" inputmode="numeric" placeholder="2000"></div>
+              <div><label for="aguaMetaEscopo">Conta</label>
+                <select id="aguaMetaEscopo"><option value="agua_pura">Só água pura</option><option value="bebidas_total">Todas as bebidas</option></select></div>
+            </div>
+            <div class="field"><label for="aguaMetaSentido">Tipo</label>
+              <select id="aguaMetaSentido"><option value="meta">Meta de hábito</option><option value="limite">Limite diário (restrição)</option></select></div>
+          </div>
+          <p class="field-err" id="aguaMetaErro" role="alert"></p>
+          <button type="button" class="btn sec" id="aguaMetaSalvar">Salvar meta de água</button>
+          <p class="hint" id="aguaRef">Estimativa: <a href="https://www.efsa.europa.eu/en/efsajournal/pub/1459" target="_blank" rel="noopener">EFSA (2010)</a> indica ingestão adequada de <b>água total</b> (alimentos + todas as bebidas) de 2,0 L/dia para mulheres e 2,5 L/dia para homens adultos, em clima e atividade moderados. Como 20–30% da água total vem dos alimentos, o app desconta 20% e usa 1,6 L ou 2,0 L de bebidas. Não é limite de segurança nem recomendação individual; calor e treino pedem individualização. Com restrição de líquidos ou doença renal, siga o limite do seu profissional.</p>
+        </div>
+      </details>
+
+      <h3 class="sec">Histórico de metas</h3>
+      <div id="metasHist"></div>
+    </section>
   </main>
 
+  </div>
+
   <footer>
-    TMB pela equação de Mifflin-St Jeor. Alimentos: Tabela TACO, 4ª edição (NEPA/Unicamp), USDA FoodData Central (domínio público) e rótulos médios; valores por 100 g, aproximados. Gasto dos exercícios pelo Compendium of Physical Activities (METs), contando só o gasto <i>extra</i> além do basal, para não somar o basal duas vezes. É uma estimativa para acompanhamento — metas e ajustes vêm da sua equipe de saúde. <span id="appVer"></span>
+    TMB pela equação de Mifflin-St Jeor. Alimentos: Tabela TACO, 4ª edição (NEPA/Unicamp), USDA FoodData Central (domínio público) e rótulos médios; valores por 100 g, aproximados. Gasto dos exercícios pelo Compendium of Physical Activities (METs), contando só o gasto <i>extra</i> além do basal, para não somar o basal duas vezes. Água: referência EFSA (2010). É uma estimativa para acompanhamento — metas e ajustes vêm da sua equipe de saúde. Seus dados ficam só neste aparelho. <span id="appVer"></span>
   </footer>
 </div>
 
-<!-- Navegação inferior -->
-<nav class="bnav" id="bnav" aria-label="Seções do app">
-  <div class="in">
-    <button type="button" id="nav-agua" data-view="agua">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C9 7.3 6 10.6 6 14a6 6 0 0 0 12 0c0-3.4-3-6.7-6-10.8z"/></svg>
-      <span>Água</span>
-    </button>
-    <button type="button" id="nav-calorias" data-view="calorias">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8c.6 3.2-2.4 4.9-2.4 7.6a2.4 2.4 0 0 0 4.8 0c0-.8-.2-1.5-.6-2.1 2.4 1.5 4.2 4.1 4.2 6.6a6 6 0 0 1-12 0c0-4.6 4.2-7.3 6-12.1z"/></svg>
-      <span>Calorias</span>
-    </button>
-    <button type="button" id="nav-analytics" data-view="analytics">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-7M12 20V5M19 20v-10M3 20.5h18"/></svg>
-      <span>Analytics</span>
-    </button>
-    <button type="button" id="nav-historico" data-view="historico">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5M12 7.5V12l3 2"/></svg>
-      <span>Histórico</span>
-    </button>
-  </div>
-</nav>
+<!-- Edição de registros -->
+<dialog id="editDlg" aria-labelledby="editTitulo">
+  <form id="editForm" method="dialog" novalidate>
+    <h2 id="editTitulo">Editar</h2>
+    <div id="editCampos"></div>
+    <p class="field-err" id="editErro" role="alert"></p>
+    <div class="dlg-acoes">
+      <button type="button" class="btn ghost" id="editCancelar">Cancelar</button>
+      <button type="button" class="btn ghost danger hide" id="editExcluir">Excluir</button>
+      <button type="submit" class="btn" id="editSalvar">Salvar</button>
+    </div>
+  </form>
+</dialog>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>

@@ -4,6 +4,33 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 
 ## [Não lançado]
 
+### Corrigido
+- **Abas quebradas e barra com botões brancos depois da atualização para a 1.2.0.** O GitHub Pages manda guardar os arquivos por 10 minutos (`Cache-Control: max-age=600`) e eles tinham sempre o mesmo endereço. Por isso o `index.html` novo carregava o `style.css` e os scripts da 1.1.0 que estavam no cache. O CSS antigo não estilizava a barra, que ficava com os botões padrão brancos e os ícones grandes. O `forms.js` antigo procurava o campo `pMeta`, removido na 1.2.0, e o erro interrompia a inicialização, deixando as abas sem resposta.
+  - CSS e scripts agora têm a versão no endereço (`?v=`); o `index.html` declara a versão (`data-versao`) e o app recarrega uma vez se página e scripts não baterem.
+  - Service worker: a página sempre revalida na rede, a cópia offline é baixada sem o cache HTTP e cada arquivo é guardado uma vez (sem a `?v=`).
+  - A inicialização segue mesmo se uma parte falhar (a navegação inicia primeiro).
+- Dados salvos ilegíveis não são mais sobrescritos: o app guarda uma cópia antes de gravar e, sem espaço para a cópia, não grava por cima.
+- Falha ao gravar no navegador aparece no status ("Erro ao salvar"), além do aviso.
+- Virada do dia com o app aberto: o dia de hoje é recalculado (ao voltar para o app e a cada minuto); o histórico fica.
+
+### Adicionado
+- **Navegação** com 4 destinos (Água, Calorias, Analytics, Perfil) em links `#`: voltar, avançar e recarregar funcionam, também em subpasta do GitHub Pages. Barra inferior no celular (área segura respeitada) e coluna lateral em telas a partir de 960 px; seção ativa com `aria-current`, foco visível e atalho "Pular para o conteúdo".
+- **Água**: copo configurável (150, 200, 250, 300, 500 ml ou volume próprio de 50 a 1.000 ml), salvo nas preferências. Cada toque cria um registro com id, volume, tipo e horário; desfazer, editar e excluir registros. Silhueta humana em SVG que enche de baixo para cima (máscara, onda sutil, respeita `prefers-reduced-motion`), limitada a 100% da meta, com o total real e o excedente em texto.
+- **Meta de água estimada** pela referência da EFSA (2010): água total de 2,5 L/dia (coeficiente masculino) ou 2,0 L/dia (feminino) menos 20% vindos dos alimentos = 2,0 L ou 1,6 L de bebidas. Só para adultos de 18 a 64 anos sem condição especial; peso e altura não entram (a referência não varia com eles). Meta personalizada e meta de profissional continuam disponíveis, com origem visível.
+- **Analytics** por período: hoje, 7, 30 e 90 dias ou intervalo personalizado (datas inicial e final incluídas), comparado com o período anterior de mesma duração. Indicadores com cobertura ("5 de 7 dias com registro"): água média, dias com meta de água atingida, calorias médias, calorias × meta, variação de peso e dias com registros. Gráficos de água e calorias por dia (com a meta vigente de cada dia e "Ver em tabela"), peso (só medições reais) e distribuição de energia dos macronutrientes (Atwater 4/4/9). Valores por toque, mouse ou teclado (setas). Estado vazio com atalhos para começar.
+- **Perfil** (antigo Histórico): nome, data de nascimento ou idade, altura, sexo das equações, objetivo (perder, manter ou **ganhar** peso), rotina, volume do copo e condições especiais, salvos com botão e validação por campo (aceita vírgula decimal). Peso atual, registro e **edição** de medições, gráfico, TMB, metas de calorias, proteína e água, e histórico de metas com vigência.
+- Edição de alimentos (quantidade e refeição, nutrientes proporcionais) e de exercícios (tempo e intensidade, gasto recalculado com o peso daquele dia).
+- Explicação da convenção do saldo na aba Calorias (consumo, gasto estimado, saldo e meta).
+- Testes: navegação, cache/publicação, persistência e migração, copo e silhueta, períodos e agregações (104 testes).
+
+### Alterado
+- **Peso atual** = pesagem com a data mais recente (média do dia, se houver várias). Uma medição antiga incluída depois não troca o peso atual.
+- **Peso usado nos cálculos**: média de 7 dias quando há pesagens em 3 ou mais desses dias (como antes); senão, a **última pesagem** (antes era o peso digitado em "Meus dados"); sem pesagens, o peso do cadastro antigo. Os dias já registrados mantêm o gasto guardado da época.
+- Perfil novo começa sem peso, altura, idade e sexo inventados (antes: 70 kg, 170 cm, 30 anos, masculino). Sem esses dados, gasto, saldo e metas estimadas aparecem como "—", com o que falta preencher.
+- Metas saíram de Analytics para o Perfil; o resumo detalhado do dia (diferença da meta, déficit estimado, proteína e nutrientes) e o gráfico de saldo foram para Calorias.
+- Dados salvos passam para a versão 5 (preferências e nome); dados da 1.2.0 abrem sem perda.
+- Tema escuro refinado (contraste, `color-scheme` para controles nativos), ícones de traço padronizados, estados de foco, toque e erro consistentes.
+
 ## [1.2.0] - 2026-11-06
 
 ### Adicionado

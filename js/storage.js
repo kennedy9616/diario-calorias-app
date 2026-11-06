@@ -23,12 +23,14 @@ let fileState = "none";   // none | ok | permission | error
 // versao 2: alimentos cadastrados no schema da base (data/alimentos_unificados.json)
 // versao 3: histórico de peso e medidas (medidas)
 // versao 4: metas versionadas (metas); profile.meta migra para metas
+// versao 5: preferências (copo, período do Analytics), nome e objetivo "ganhar" no perfil
+const DATA_VERSAO = 5;
 function snapshot() {
-  return { app: "diario-calorias", versao: 4, savedAt, profile, days, medidas, metas };
+  return { app: "diario-calorias", versao: DATA_VERSAO, savedAt, profile, preferencias: prefs, days, medidas, metas };
 }
 // backup do app (profile/days) ou arquivo de "Exportar alimentos cadastrados" (alimentos)
 function validData(d) {
-  return !!d && typeof d === "object" && !Array.isArray(d) && !!(d.profile || d.days || Array.isArray(d.alimentos) || Array.isArray(d.medidas) || Array.isArray(d.metas));
+  return !!d && typeof d === "object" && !Array.isArray(d) && !!(d.profile || d.days || Array.isArray(d.alimentos) || Array.isArray(d.medidas) || Array.isArray(d.metas) || d.preferencias);
 }
 // campos simples guardados em cada dia, além das listas
 const DAY_EXTRA = ["tdee", "tmb", "pesoRef", "pesoMetodo", "completo"];
@@ -43,11 +45,34 @@ function cleanDays(src) {
   });
   return out;
 }
-// campos do perfil adicionados na versão 1.2 (perfis antigos ganham o padrão)
+// preferências: valores fora da faixa voltam ao padrão (nunca apagam o resto dos dados)
+function cleanPrefs(src) {
+  const p = src && typeof src === "object" ? src : {};
+  const out = clone(DEFAULT_PREFS);
+  const copo = Number(p.copo_ml);
+  if (isNum(copo) && copo >= COPO_FAIXA[0] && copo <= COPO_FAIXA[1]) out.copo_ml = Math.round(copo);
+  if (p.copo_tipo === "outra") out.copo_tipo = "outra";
+  if (["hoje", "7d", "30d", "90d", "custom"].includes(p.periodo)) out.periodo = p.periodo;
+  const isK = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v || ""));
+  if (isK(p.periodo_ini)) out.periodo_ini = p.periodo_ini;
+  if (isK(p.periodo_fim)) out.periodo_fim = p.periodo_fim;
+  return out;
+}
+
+// campo numérico do perfil: número válido ou null (nunca NaN)
+const numOuNull = v => (v == null || v === "" ? null : isNum(Number(v)) ? Number(v) : null);
+
+// campos do perfil adicionados nas versões 1.2 e 1.3 (perfis antigos ganham o padrão)
 function cleanProfileExtras() {
+  profile.nome = typeof profile.nome === "string" ? profile.nome.trim().slice(0, 60) : "";
+  profile.peso = numOuNull(profile.peso);
+  profile.altura = numOuNull(profile.altura);
+  profile.idade = numOuNull(profile.idade);
+  if (profile.sexo !== "M" && profile.sexo !== "F") profile.sexo = "";
+  profile.fator = [1.2, 1.3, 1.4].includes(Number(profile.fator)) ? Number(profile.fator) : 1.2;
   profile.condicoes = Array.isArray(profile.condicoes) ? profile.condicoes.filter(k => CONDICOES.some(c => c.k === k)) : [];
   if (idadeEm(profile.nascimento, TODAY) == null) profile.nascimento = "";
-  if (profile.objetivo !== "perder") profile.objetivo = "manter";
+  if (!["perder", "manter", "ganhar"].includes(profile.objetivo)) profile.objetivo = "manter";
   const t = profile.treino && typeof profile.treino === "object" ? profile.treino : {};
   profile.treino = {
     tipo: ["nenhum", "aerobico", "forca", "misto"].includes(t.tipo) ? t.tipo : "nenhum",
@@ -63,6 +88,7 @@ function replaceWith(d) {
   days = cleanDays(d.days);
   medidas = cleanMedidas(d.medidas);
   metas = cleanMetas(d.metas);
+  prefs = cleanPrefs(d.preferencias);
   migrarMetaAntiga();
   savedAt = d.savedAt || null;
 }
@@ -78,6 +104,8 @@ function mergeIn(d) {
   if (Array.isArray(d.alimentos)) profile.customFoods = cleanCustomFoods((profile.customFoods || []).concat(d.alimentos));
   if (Array.isArray(d.medidas)) medidas = cleanMedidas(medidas.concat(d.medidas));
   if (Array.isArray(d.metas)) metas = cleanMetas(metas.concat(d.metas));
+  // preferências do arquivo só entram se as daqui ainda estão no padrão
+  if (d.preferencias && !Object.keys(DEFAULT_PREFS).some(k => prefs[k] !== DEFAULT_PREFS[k])) prefs = cleanPrefs(d.preferencias);
   const inc = cleanDays(d.days);
   Object.keys(inc).forEach(k => {
     const mine = days[k] || { foods: [], ex: [] };
@@ -93,16 +121,26 @@ function mergeIn(d) {
 
 /* ---------- Salvar ---------- */
 let fileTimer = null, writing = false, writeAgain = false;
+let saveError = null;      // última falha ao gravar no navegador (null = gravou)
+let lerBloqueado = false;  // dados salvos ilegíveis e sem cópia: o app não grava por cima
 
+// Grava no navegador (e no arquivo, se houver). Devolve false se não conseguiu gravar.
 function persist() {
   savedAt = new Date().toISOString();
-  if (LS_OK) {
-    try { localStorage.setItem(LSKEY, JSON.stringify(snapshot())); }
-    catch (e) { toast("Não consegui salvar no navegador (" + errMsg(e) + "). Baixe uma cópia de segurança."); }
+  let ok = true;
+  if (lerBloqueado) ok = false;
+  else if (LS_OK) {
+    try { localStorage.setItem(LSKEY, JSON.stringify(snapshot())); saveError = null; }
+    catch (e) {
+      ok = false;
+      saveError = errMsg(e);
+      toast("Não consegui salvar no navegador (" + saveError + "). Baixe uma cópia de segurança.", 5000);
+    }
   }
   clearTimeout(fileTimer);
   fileTimer = setTimeout(writeFile, 300);
   setStatus();
+  return ok;
 }
 
 async function writeFile() {
@@ -128,9 +166,11 @@ function saveDay(k = cur) {
   if (!d) return;
   if (k === TODAY || d.tdee == null) {
     // guarda o cálculo da época: o dia passado não muda quando o perfil mudar
+    // (sem dados suficientes no Perfil fica null, e o dia é calculado quando houver)
     const ref = pesoReferencia(k);
-    d.tdee = Math.round(dayTdee(k));
-    d.tmb = Math.round(dayTmb(k));
+    const g = dayTdee(k), b = dayTmb(k);
+    d.tdee = g == null ? null : Math.round(g);
+    d.tmb = b == null ? null : Math.round(b);
     d.pesoRef = r1(ref.peso);
     d.pesoMetodo = ref.metodo;
   }
@@ -143,20 +183,33 @@ function saveProfile() {
   profTimer = setTimeout(persist, 500);
 }
 
+// Guarda uma cópia do texto salvo que não pôde ser lido, antes de qualquer gravação nova.
+// Sem espaço para a cópia, o app não grava por cima dos dados (lerBloqueado) e avisa.
+function guardarIlegivel(raw, motivo) {
+  const k = LSKEY + ":ilegivel:" + new Date().toISOString();
+  try { localStorage.setItem(k, raw); }
+  catch (_) { lerBloqueado = true; }
+  console.warn("Dados salvos ilegíveis (" + motivo + ")");
+  toast(lerBloqueado
+    ? "Não consegui ler os dados salvos. Para não perdê-los, o app não vai gravar por cima: baixe uma cópia de segurança pelo menu do topo."
+    : "Não consegui ler os dados salvos (" + motivo + "). Guardei uma cópia deles neste navegador; o app começa vazio.", 7000);
+  return k;
+}
+
 // carrega o que estiver salvo no navegador; devolve true se havia dados
 function loadSaved() {
   if (!LS_OK) return false;
-  try {
-    const raw = localStorage.getItem(LSKEY);
-    if (raw) {
-      const d = JSON.parse(raw);
-      if (validData(d)) { replaceWith(d); return true; }
-    }
-  } catch (e) {
-    console.error(e);
-    toast("Não consegui ler os dados salvos (" + errMsg(e) + ").");
-  }
-  return false;
+  let raw = null;
+  try { raw = localStorage.getItem(LSKEY); }
+  catch (e) { console.error(e); toast("Não consegui ler os dados salvos (" + errMsg(e) + ")."); return false; }
+  if (!raw) return false;
+  let d;
+  try { d = JSON.parse(raw); }
+  catch (e) { guardarIlegivel(raw, errMsg(e)); return true; }
+  if (!validData(d)) { guardarIlegivel(raw, "formato desconhecido"); return true; }
+  try { replaceWith(d); }
+  catch (e) { guardarIlegivel(raw, errMsg(e)); replaceWith({}); }
+  return true;
 }
 
 /* ---------- IndexedDB: lembra do arquivo usado da última vez ---------- */
@@ -349,6 +402,12 @@ function setStatus() {
   } else if (fileState === "error") {
     txt = "Erro no arquivo"; s.classList.add("warn");
     info = "Não consegui gravar no arquivo. Os dados continuam salvos no navegador. Crie ou abra o arquivo de novo.";
+  } else if (lerBloqueado) {
+    txt = "Dados não lidos"; s.classList.add("warn");
+    info = "Os dados salvos neste navegador não puderam ser lidos. Para não perdê-los, o app não grava por cima. Baixe uma cópia de segurança antes de continuar.";
+  } else if (saveError) {
+    txt = "Erro ao salvar"; s.classList.add("warn");
+    info = "A última gravação no navegador falhou (" + escapeHtml(saveError) + "). Libere espaço no aparelho ou baixe uma cópia de segurança agora.";
   } else if (LS_OK) {
     txt = "Salvo " + WHERE;
     if (IOS && !STANDALONE) {
@@ -370,16 +429,18 @@ function setStatus() {
   $("mNew").classList.toggle("hide", !FS_OK);
 }
 
-const closeMenu = () => $("modeMenu").classList.remove("open");
+const closeMenu = () => { $("modeMenu").classList.remove("open"); $("status").setAttribute("aria-expanded", "false"); };
 
 function initStorageMenu() {
   $("status").onclick = e => {
     e.stopPropagation();
     if (fileState === "permission") { closeMenu(); reconnect(); return; }
-    $("modeMenu").classList.toggle("open");
+    const aberto = $("modeMenu").classList.toggle("open");
+    $("status").setAttribute("aria-expanded", String(aberto));
   };
   $("modeMenu").onclick = e => e.stopPropagation();
   document.addEventListener("click", closeMenu);
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && $("modeMenu").classList.contains("open")) { closeMenu(); $("status").focus(); } });
   $("mReconnect").onclick = () => { closeMenu(); reconnect(); };
   $("mNew").onclick = () => { closeMenu(); createFile(); };
   $("mOpen").onclick = () => { closeMenu(); openFile(); };
