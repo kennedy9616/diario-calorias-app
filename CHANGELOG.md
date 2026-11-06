@@ -4,6 +4,13 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 
 ## [Não lançado]
 
+## [1.1.1] - 2026-11-06
+
+### Corrigido
+- Nomes dos 13.225 registros USDA localizados para português brasileiro, com revisão de termos alimentares e preservação das denominações originais no JSON.
+- Base compacta regenerada e cache atualizado para apresentar os nomes em português no app.
+- Validação garante que IDs, nutrientes, porções e os registros da TACO não foram alterados pela localização.
+
 ## [1.1.0] - 2026-11-05
 
 ### Adicionado

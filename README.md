@@ -10,7 +10,7 @@ Aplicativo simples para registrar o que você come e os exercícios que faz, e v
 
 ## O que ele faz
 
-- Busca em mais de **13 mil alimentos** (Tabela TACO e USDA), com calorias e 11 nutrientes por 100 g. Buscar em português também encontra os alimentos do USDA, que estão em inglês ("frango" acha "chicken").
+- Busca em mais de **13 mil alimentos** (Tabela TACO e USDA), com nomes em português, calorias e 11 nutrientes por 100 g.
 - Porções caseiras ("1 cup", "1 slice"…) nos alimentos que têm essa informação, e informação nutricional completa da quantidade escolhida.
 - Cadastro de alimentos que não estão na lista: você informa os valores do rótulo e eles ficam salvos, no mesmo formato da base de alimentos.
 - Registro de exercícios (caminhada, academia, corrida, bicicleta, natação…) com intensidade e tempo.
@@ -41,6 +41,10 @@ O app abre no navegador, mas você pode colocar um ícone na tela inicial. Ele a
 ### Computador (Chrome ou Edge)
 
 Clique no ícone de instalar na barra de endereço, ou em **Instalar** na faixa do topo da página.
+
+## Nomes dos alimentos
+
+Os nomes do USDA foram traduzidos automaticamente para português brasileiro, com revisão de termos e por amostragem. Marcas, pratos e variedades podem manter sua denominação original. O JSON conserva `nome_original` e `idioma_original` para conferência; valores nutricionais, IDs, categorias e porções da fonte são preservados.
 
 ## Onde ficam os seus dados
 
