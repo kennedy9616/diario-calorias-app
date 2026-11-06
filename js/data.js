@@ -73,8 +73,8 @@ const NUTRIENTES = [
 // posição de cada nutriente no array (NUT.kcal = 0, NUT.carb = 1, ...)
 const NUT = { kcal: 0, carb: 1, prot: 2, gord: 3, fibra: 4, sodio: 5, acucar: 6, gsat: 7, colest: 8, calcio: 9, ferro: 10, potassio: 11 };
 
-// A base do USDA está em inglês. Buscar em português também procura estas traduções
-// (ex.: "frango" encontra "Chicken, breast..."). Chaves sem acento. A tradução precisa
+// A busca aceita variantes em português e equivalentes em inglês das fontes.
+// Chaves sem acento. A alternativa precisa
 // casar com uma palavra inteira do nome (aceita plural com s/es): "oil" não acha "boiled".
 // palavras de ligação ignoradas na busca quando há outras palavras ("arroz com feijão")
 const PALAVRAS_LIGACAO = ["a", "o", "as", "os", "de", "da", "do", "das", "dos", "com", "e", "em", "na", "no", "nas", "nos", "ao", "aos", "para", "por", "um", "uma"];
@@ -85,26 +85,26 @@ const SINONIMOS = {
   amendoim: ["peanut"], arroz: ["rice"], assado: ["roasted", "baked"], atum: ["tuna"], aveia: ["oat"],
   azeite: ["olive oil"], azeitona: ["olive"], bacalhau: ["cod"], batata: ["potato"], berinjela: ["eggplant"],
   biscoito: ["cookie", "cracker", "biscuit"], bolacha: ["cookie", "cracker"], bolo: ["cake"], bovina: ["beef"],
-  brocolis: ["broccoli"], cafe: ["coffee"], camarao: ["shrimp"], caranguejo: ["crab"], carne: ["beef", "meat"],
+  brocolis: ["broccoli"], cafe: ["coffee"], camarao: ["camaroes", "shrimp"], caranguejo: ["crab"], carne: ["beef", "meat"],
   carneiro: ["lamb", "mutton"], castanha: ["nut", "cashew"], cebola: ["onion"], cenoura: ["carrot"],
   cereja: ["cherry", "cherries"], cerveja: ["beer"], cha: ["tea"], chocolate: ["chocolate"], coco: ["coconut"],
   cogumelo: ["mushroom"], cordeiro: ["lamb"], couve: ["kale", "collard"],
   cozido: ["cooked", "boiled"], creme: ["cream"], cru: ["raw"], crua: ["raw"], desnatado: ["skim", "nonfat"],
-  doce: ["sweet", "candy"], ervilha: ["pea"], espinafre: ["spinach"], farinha: ["flour"], feijao: ["bean"],
+  doce: ["sweet", "candy"], ervilha: ["pea"], espinafre: ["spinach"], farinha: ["flour"], feijao: ["feijoes", "bean"],
   figado: ["liver"], frango: ["chicken"], frito: ["fried"], frita: ["fried"], galinha: ["chicken"],
-  geleia: ["jam", "jelly"], gelatina: ["gelatin"], grao: ["chickpea"], grelhado: ["grilled", "broiled"],
+  geleia: ["jam", "jelly"], gelatina: ["gelatin"], grao: ["graos", "chickpea"], grelhado: ["grilled", "broiled"],
   hamburguer: ["hamburger", "burger"], inhame: ["yam", "taro"], integral: ["whole"], iogurte: ["yogurt"],
-  lagosta: ["lobster"], laranja: ["orange"], leite: ["milk"], lentilha: ["lentil"], limao: ["lemon", "lime"],
+  lagosta: ["lobster"], laranja: ["orange"], leite: ["milk"], lentilha: ["lentil"], limao: ["limoes", "lemon", "lime"],
   linguica: ["sausage"], lula: ["squid"], maca: ["apple"], macarrao: ["pasta", "macaroni", "spaghetti", "noodle"],
   maionese: ["mayonnaise"], mamao: ["papaya"], mandioca: ["cassava"], manga: ["mango"], manteiga: ["butter"],
-  margarina: ["margarine"], mel: ["honey"], melancia: ["watermelon"], melao: ["melon"], milho: ["corn"],
+  margarina: ["margarine"], mel: ["honey"], melancia: ["watermelon"], melao: ["meloes", "melon"], milho: ["corn"],
   molho: ["sauce", "gravy"], morango: ["strawberry", "strawberries"], mostarda: ["mustard"], mucarela: ["mozzarella"],
-  mussarela: ["mozzarella"], nata: ["cream"], noz: ["walnut"], oleo: ["oil"], ovo: ["egg"], pao: ["bread"],
+  mussarela: ["mozzarella"], nata: ["cream"], noz: ["walnut"], oleo: ["oil"], ovo: ["egg"], pao: ["paes", "bread"],
   panqueca: ["pancake"], parmesao: ["parmesan"], pato: ["duck"], peito: ["breast"], peixe: ["fish"],
   pepino: ["cucumber"], pera: ["pear"], peru: ["turkey"], pessego: ["peach"], pimentao: ["pepper"],
   pipoca: ["popcorn"], polvo: ["octopus"], porco: ["pork"], presunto: ["ham"], pudim: ["pudding"],
   queijo: ["cheese"], refrigerante: ["soda", "cola", "soft drink"], repolho: ["cabbage"], requeijao: ["cream cheese"],
-  sal: ["salt"], salada: ["salad"], salmao: ["salmon"], salsicha: ["sausage", "frankfurter"],
+  sal: ["salt"], salada: ["salad"], salmao: ["salmoes", "salmon"], salsicha: ["sausage", "frankfurter"],
   sanduiche: ["sandwich"], sardinha: ["sardine"], soja: ["soy"], sopa: ["soup"], sorvete: ["ice cream"],
   suco: ["juice"], suina: ["pork"], tomate: ["tomato"], torrada: ["toast"], torta: ["pie"], trigo: ["wheat"],
   uva: ["grape"], vinagre: ["vinegar"], vinho: ["wine"]
