@@ -4,7 +4,8 @@
 
 /* ---------- Alimentos ---------- */
 
-const UNIDADES = '<option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option>';
+// ml conta como g (densidade ~1): aproximação, como no rótulo da maioria das bebidas
+const UNIDADES = '<option value="g">g</option><option value="kg">kg</option><option value="ml">ml (≈ g)</option>';
 const MAX_SUGG = 20;          // sugestões mostradas de cada vez
 
 // número digitado (aceita vírgula); vazio ou inválido → null
@@ -18,7 +19,7 @@ function numIn(id) {
 // nutriente formatado; null = sem dado na fonte
 function fmtNut(v, unit) {
   if (v == null) return "—";
-  return (unit === "g" && v < 10 ? fmt1(v) : fmt(v)) + " " + unit;
+  return (unit !== "kcal" && v < 10 ? fmt1(v) : fmt(v)) + " " + unit;
 }
 
 // quantidade informada, sempre em gramas (ml conta como g; porção usa o peso dela)
@@ -36,11 +37,11 @@ function grams(f = currentFood()) {
 
 function currentFood() {
   if (selFood) return selFood;
-  const n = norm($("foodName").value).replace(/\s+/g, " ");
-  if (!n) return null;
-  const exact = allFoods().find(f => f.s === n);
+  const nome = $("foodName").value;
+  if (!norm(nome)) return null;
+  const exact = findByName(nome);
   if (exact) return exact;
-  const hits = searchFoods(n);
+  const hits = searchFoods(nome);
   return hits.length === 1 ? hits[0] : null;
 }
 
@@ -88,7 +89,7 @@ function showSugg() {
     const badge = b.querySelector(".badge");
     badge.textContent = FONTE_ROTULO[f.src] || f.src;
     badge.classList.add("b-" + f.src);
-    b.querySelector("small").textContent = fmt(f.nut[N.kcal]) + " kcal/100 g";
+    b.querySelector("small").textContent = fmt(f.nut[NUT.kcal]) + " kcal/100 g";
     b.onmousedown = e => e.preventDefault(); // não tira o foco do campo antes do clique
     b.onclick = () => pickFood(f);
     sugg.appendChild(b);
@@ -128,7 +129,7 @@ function renderNutri(f, g) {
   $("nutriQty").textContent = `em ${fmt1(g)} g`;
   $("nutriTable").innerHTML = NUTRIENTES.map((x, i) =>
     `<tr><td>${x.n}</td><td class="num">${fmtNut(v[i], x.u)}</td></tr>`).join("");
-  $("nutriSrc").textContent = "Fonte: " + (FONTE_NOME[f.src] || f.src) + "."
+  $("nutriSrc").textContent = "Fonte: " + fonteDe(f) + "."
     + (v.some(x => x == null) ? " “—” significa sem dado na fonte (não é zero)." : "");
 }
 
@@ -148,21 +149,21 @@ function updateFoodPreview() {
     erro = c.erro;
     if (!erro && c.kcal != null) {
       v = emptyNut();
-      v[N.kcal] = c.kcal * g / 100;
-      v[N.carb] = c.carb == null ? null : c.carb * g / 100;
-      v[N.prot] = c.prot == null ? null : c.prot * g / 100;
-      v[N.gord] = c.gord == null ? null : c.gord * g / 100;
+      v[NUT.kcal] = c.kcal * g / 100;
+      v[NUT.carb] = c.carb == null ? null : c.carb * g / 100;
+      v[NUT.prot] = c.prot == null ? null : c.prot * g / 100;
+      v[NUT.gord] = c.gord == null ? null : c.gord * g / 100;
     }
   }
 
   if (v && g > 0) {
-    $("foodPrev").innerHTML = `≈ <b>${fmt(v[N.kcal])} kcal</b> · ${fmtNut(v[N.carb], "g")} carb · ${fmtNut(v[N.prot], "g")} prot · ${fmtNut(v[N.gord], "g")} gord`;
+    $("foodPrev").innerHTML = `≈ <b>${fmt(v[NUT.kcal])} kcal</b> · ${fmtNut(v[NUT.carb], "g")} carb · ${fmtNut(v[NUT.prot], "g")} prot · ${fmtNut(v[NUT.gord], "g")} gord`;
     $("addFood").disabled = !ready;
     return;
   }
   let msg = "";
   if (erro) msg = erro;
-  else if (f) msg = `${fmt(f.nut[N.kcal])} kcal a cada 100 g · informe a quantidade`;
+  else if (f) msg = `${fmt(f.nut[NUT.kcal])} kcal a cada 100 g · informe a quantidade`;
   else if (hasName && $("cKcal").value === "" && searchFoods($("foodName").value).length) {
     msg = "Escolha um alimento da lista (ou informe as kcal abaixo para cadastrar um novo).";
   }
@@ -170,7 +171,6 @@ function updateFoodPreview() {
   $("addFood").disabled = true;
 }
 
-const r1 = x => x == null ? null : Math.round(x * 10) / 10;
 
 function addFood() {
   let f = currentFood();
@@ -193,12 +193,12 @@ function addFood() {
     name: f.n,
     g: r1(g),
     unit: u.startsWith("p") ? "porcao" : u,
-    kcal: Math.round(v[N.kcal]),
-    carb: r1(v[N.carb]),
-    prot: r1(v[N.prot]),
-    gord: r1(v[N.gord]),
-    fibra: r1(v[N.fibra]),
-    sodio: v[N.sodio] == null ? null : Math.round(v[N.sodio]),
+    kcal: Math.round(v[NUT.kcal]),
+    carb: r1(v[NUT.carb]),
+    prot: r1(v[NUT.prot]),
+    gord: r1(v[NUT.gord]),
+    fibra: r1(v[NUT.fibra]),
+    sodio: v[NUT.sodio] == null ? null : Math.round(v[NUT.sodio]),
     meal: $("meal").value,
     t: Date.now()
   };

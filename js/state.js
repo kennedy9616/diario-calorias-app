@@ -2,6 +2,7 @@
    Estado do app e cálculos de gasto calórico
    ========================================================== */
 
+const APP_VERSION = "1.1.0";
 const TODAY = keyOf(new Date());
 
 // valores iniciais para quem abre o app pela primeira vez
@@ -33,19 +34,25 @@ function dayTdee(k) {
   return (k === TODAY || !d || d.tdee == null) ? tdee() : d.tdee;
 }
 
-// soma do dia; nutriente sem dado (null) ou de registros antigos conta como 0
+// Soma do dia. Nutriente sem dado (null, ou registro antigo sem o campo) não entra na
+// soma e é contado em falta[nutriente]: a tela mostra "≥" (soma parcial) ou "—" (nenhum dado).
 function totals(k = cur) {
   const d = day(k);
-  const sum = (list, key) => list.reduce((s, x) => s + (x[key] || 0), 0);
-  const ex = sum(d.ex, "kcal");
+  const falta = {};
+  const sum = (list, key) => list.reduce((s, x) => {
+    if (isNum(x[key])) return s + x[key];
+    falta[key] = (falta[key] || 0) + 1;
+    return s;
+  }, 0);
+  const ex = d.ex.reduce((s, e) => s + (e.kcal || 0), 0);
   const base = dayTdee(k);
   return {
-    cons: sum(d.foods, "kcal"),
+    cons: d.foods.reduce((s, f) => s + (f.kcal || 0), 0),
     carb: sum(d.foods, "carb"),
     prot: sum(d.foods, "prot"),
     gord: sum(d.foods, "gord"),
     fibra: sum(d.foods, "fibra"),
     sodio: sum(d.foods, "sodio"),
-    ex, base, gasto: base + ex, has: d.foods.length > 0
+    ex, base, gasto: base + ex, has: d.foods.length > 0, n: d.foods.length, falta
   };
 }

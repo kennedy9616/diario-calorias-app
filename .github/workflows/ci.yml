@@ -6,6 +6,9 @@ on:
   push:
     branches: [develop, master]
 
+permissions:
+  contents: read
+
 jobs:
   verificar:
     name: Verificações
@@ -18,6 +21,9 @@ jobs:
 
       - name: Sintaxe do JavaScript
         run: for f in js/*.js sw.js; do node --check "$f" || exit 1; done
+
+      - name: Regressões de busca, dados e importação
+        run: node tools/smoke.cjs
 
       - name: JSON válidos
         run: |

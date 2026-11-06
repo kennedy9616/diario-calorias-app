@@ -13,16 +13,25 @@ function renderDate() {
   $("next").disabled = cur >= TODAY;
 }
 
+// total de um nutriente: "12 g"; "≥ 12 g" se algum alimento não tem o dado; "—" se nenhum tem
+function fmtTotal(t, key, unit) {
+  const f = t.falta[key] || 0;
+  if (t.n && f === t.n) return "—";
+  return (f ? "≥ " : "") + fmt(t[key]) + " " + unit;
+}
+
 function renderSummary() {
   const t = totals();
   $("sCons").textContent = fmt(t.cons);
   $("sGasto").textContent = fmt(t.gasto);
   $("sTmb").textContent = fmt(tmb());
   $("sEx").textContent = fmt(t.ex);
-  $("sCarb").textContent = fmt(t.carb) + " g";
-  $("sProt").textContent = fmt(t.prot) + " g";
-  $("sGord").textContent = fmt(t.gord) + " g";
-  $("sMicro").textContent = `Fibras ${fmt(t.fibra)} g · Sódio ${fmt(t.sodio)} mg`;
+  $("sCarb").textContent = fmtTotal(t, "carb", "g");
+  $("sProt").textContent = fmtTotal(t, "prot", "g");
+  $("sGord").textContent = fmtTotal(t, "gord", "g");
+  $("sMicro").textContent = `Fibras ${fmtTotal(t, "fibra", "g")} · Sódio ${fmtTotal(t, "sodio", "mg")}`;
+  const parcial = ["carb", "prot", "gord", "fibra", "sodio"].some(k => t.falta[k]);
+  $("sHint").classList.toggle("hide", !parcial);
 
   const b = $("balance");
   if (!t.has && !t.ex) {

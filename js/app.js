@@ -29,6 +29,7 @@ function init() {
 
   const hadData = loadSaved();
   ready = true;
+  $("appVer").textContent = "Versão " + APP_VERSION + ".";
   setStatus();
   renderProfile();
   renderAll();
@@ -40,7 +41,9 @@ function init() {
   }
 
   // base completa de alimentos (~2 MB): carrega depois que a tela já apareceu
-  setTimeout(loadFoodBase, 0);
+  const carregarBase = () => loadFoodBase(onFoodBaseChange);
+  if (window.requestIdleCallback) requestIdleCallback(carregarBase, { timeout: 1500 });
+  else setTimeout(carregarBase, 200);
 
   // pede ao sistema para não apagar os dados por falta de espaço
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (_) { /* opcional */ }

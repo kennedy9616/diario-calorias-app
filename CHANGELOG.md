@@ -4,6 +4,8 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 
 ## [Não lançado]
 
+## [1.1.0] - 2026-11-05
+
 ### Adicionado
 - Base completa com **13.815 alimentos**: Tabela TACO (591, em português) e USDA FoodData Central (13.224, em inglês).
 - A busca em português também encontra os alimentos do USDA ("frango" acha "chicken"). Os resultados vêm ordenados por relevância e mostram um selo com a fonte.
@@ -17,6 +19,13 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 
 ### Alterado
 - Alimentos cadastrados na versão 1.0 são convertidos automaticamente para o formato novo, sem perder nada.
+
+### Corrigido
+- Busca ignora palavras de ligação e evita correspondências no meio de palavras em inglês.
+- Identificadores de alimentos antigos consideram o nome e os valores nutricionais; alimentos da comunidade aparecem depois das fontes oficiais.
+- Resumo diferencia nutrientes sem informação de valores iguais a zero; alimentos comuns vinculados à TACO recebem os nutrientes disponíveis.
+- Exportações de alimentos podem ser importadas novamente sem substituir o arquivo de origem pelo diário completo.
+- Recuperadas as correções da revisão anterior e acrescentadas verificações de regressão no CI.
 
 ## [1.0.0] - 2026-11-05
 

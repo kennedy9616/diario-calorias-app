@@ -20,6 +20,15 @@ const addDays = (k, n) => { const d = fromKey(k); d.setDate(d.getDate() + n); re
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const clone = o => JSON.parse(JSON.stringify(o));
 const errMsg = e => String((e && (e.name || e.code || e.message)) || "erro desconhecido").slice(0, 60);
+const isNum = v => typeof v === "number" && isFinite(v);
+const r1 = x => x == null ? null : Math.round(x * 10) / 10;   // 1 casa decimal, preservando null
+
+// hash curto e estável de um texto (FNV-1a 32 bits, em base 36)
+function hash36(s) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(36);
+}
 
 function escapeHtml(t) {
   return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

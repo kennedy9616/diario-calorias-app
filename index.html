@@ -46,7 +46,7 @@
       <button type="button" id="mNew"><b>Criar arquivo de dados</b><small>Escolha uma pasta do computador. Tudo o que você registrar é gravado nele na hora.</small></button>
       <button type="button" id="mOpen"><b>Abrir arquivo de dados</b><small>Carrega um arquivo .json salvo antes (de outro aparelho, por exemplo).</small></button>
       <button type="button" id="mDown"><b>Baixar cópia de segurança</b><small>Baixa um arquivo .json com todos os seus registros.</small></button>
-      <button type="button" id="mExport"><b>Exportar alimentos cadastrados</b><small>Baixa os alimentos que você cadastrou, no formato da base de alimentos, para incluir no app.</small></button>
+      <button type="button" id="mExport"><b>Exportar alimentos cadastrados</b><small>Baixa os alimentos que você cadastrou (no formato da base de alimentos), para guardar ou sugerir a inclusão no app.</small></button>
     </div>
     <input type="file" id="fileIn" accept=".json,application/json" class="hide">
   </header>
@@ -83,6 +83,7 @@
       <div>Gorduras<br><b class="num" id="sGord">0 g</b></div>
     </div>
     <div class="micro num" id="sMicro"></div>
+    <div class="micro-hint hide" id="sHint">≥ = soma parcial: alguns alimentos não têm esse dado na fonte. — = nenhum tem.</div>
     <div id="metaBox" class="hide">
       <div class="bar" id="metaBar"><i id="metaFill"></i></div>
       <div class="barlbl"><span id="metaTxt"></span><span id="metaRest"></span></div>
@@ -116,7 +117,7 @@
       <div class="row">
         <div class="w2"><label for="qty">Quantidade</label><input id="qty" type="number" inputmode="decimal" min="0" step="any" placeholder="150"></div>
         <div><label for="unit">Unidade</label>
-          <select id="unit"><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option></select></div>
+          <select id="unit"><option value="g">g</option><option value="kg">kg</option><option value="ml">ml (≈ g)</option></select></div>
       </div>
       <div class="field">
         <label for="meal">Refeição</label>
@@ -189,7 +190,7 @@
   </section>
 
   <footer>
-    TMB pela equação de Mifflin-St Jeor. Alimentos: Tabela TACO, 4ª edição (NEPA/Unicamp), USDA FoodData Central (domínio público) e rótulos médios; valores por 100 g, aproximados. Gasto dos exercícios pelo Compendium of Physical Activities (METs), contando só o gasto <i>extra</i> além do basal, para não somar o basal duas vezes. É uma estimativa para acompanhamento — metas e ajustes vêm da sua equipe de saúde.
+    TMB pela equação de Mifflin-St Jeor. Alimentos: Tabela TACO, 4ª edição (NEPA/Unicamp), USDA FoodData Central (domínio público) e rótulos médios; valores por 100 g, aproximados. Gasto dos exercícios pelo Compendium of Physical Activities (METs), contando só o gasto <i>extra</i> além do basal, para não somar o basal duas vezes. É uma estimativa para acompanhamento — metas e ajustes vêm da sua equipe de saúde. <span id="appVer"></span>
   </footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
