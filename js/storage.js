@@ -39,6 +39,7 @@ function cleanDays(src) {
     const d = src[k] || {};
     out[k] = { foods: Array.isArray(d.foods) ? d.foods : [], ex: Array.isArray(d.ex) ? d.ex : [] };
     DAY_EXTRA.forEach(x => { if (d[x] !== undefined) out[k][x] = d[x]; });
+    if (Array.isArray(d.agua)) out[k].agua = cleanAgua(d.agua);
   });
   return out;
 }
@@ -84,6 +85,7 @@ function mergeIn(d) {
     inc[k].foods.forEach(f => { if (!ids.has(f.id)) mine.foods.push(f); });
     inc[k].ex.forEach(e => { if (!ids.has(e.id)) mine.ex.push(e); });
     DAY_EXTRA.forEach(x => { if (mine[x] == null && inc[k][x] != null) mine[x] = inc[k][x]; });
+    if (inc[k].agua) mine.agua = cleanAgua((mine.agua || []).concat(inc[k].agua));
     days[k] = mine;
   });
   migrarMetaAntiga();

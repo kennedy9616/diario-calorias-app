@@ -34,6 +34,7 @@
   <script defer src="js/body.js"></script>
   <script defer src="js/metas.js"></script>
   <script defer src="js/analytics.js"></script>
+  <script defer src="js/water.js"></script>
   <script defer src="js/install.js"></script>
   <script defer src="js/nav.js"></script>
   <script defer src="js/app.js"></script>
@@ -71,9 +72,65 @@
 
   <!-- ===== Aba Água ===== -->
   <main id="view-agua" class="view hide">
+  <!-- Registro de água do dia -->
+  <section class="card water">
+    <div class="wtop">
+      <div class="glass" id="aguaGlass"></div>
+      <div class="wnums">
+        <div class="k">Registrado no dia</div>
+        <div class="hero num" id="aguaTotal">—</div>
+        <div class="sub" id="aguaMetaTxt"></div>
+        <div class="sub" id="aguaOutras"></div>
+      </div>
+    </div>
+    <p class="note hide" id="aguaAviso" role="note"></p>
+    <div class="quick" id="aguaQuick" aria-label="Adicionar volume rápido">
+      <button type="button" data-ml="150">+150 ml</button>
+      <button type="button" data-ml="200">+200 ml</button>
+      <button type="button" data-ml="250">+250 ml</button>
+      <button type="button" data-ml="300">+300 ml</button>
+      <button type="button" data-ml="500">+500 ml</button>
+    </div>
+    <div class="row">
+      <div><label for="aguaMl">Outro volume (ml)</label><input id="aguaMl" type="number" inputmode="numeric" min="10" max="3000" placeholder="350"></div>
+      <div><label for="aguaTipo">Bebida</label><select id="aguaTipo"><option value="agua">Água</option><option value="outra">Outra bebida</option></select></div>
+    </div>
+    <div class="preview err" id="aguaErro" role="alert"></div>
+    <button type="button" class="btn" id="aguaAdd">Adicionar</button>
+    <div class="list" id="aguaList"></div>
+    <p class="hint">Os botões rápidos usam a bebida escolhida acima. Volume de outras bebidas não é igual ao seu conteúdo de água. Água dos alimentos: não estimada (a base de alimentos não tem umidade).</p>
+  </section>
+
+  <!-- Últimos 7 dias -->
+  <section class="card chart">
+    <h2>Últimos 7 dias <span>no escopo da meta</span></h2>
+    <div id="aguaSemana" class="chartbox"></div>
+    <div class="legend"><span><i class="def"></i>Registrado</span><span><i class="ln mt"></i>Meta ou limite do dia</span></div>
+  </section>
+
+  <!-- Meta de água -->
   <section class="card">
-    <h2>Água</h2>
-    <p class="hint">Registro de água em breve.</p>
+    <details id="aguaMetaBox">
+      <summary>Meta de água <span id="aguaMetaSum"></span></summary>
+      <div class="prof-body">
+        <p class="hint" id="aguaMetaAtual"></p>
+        <button type="button" class="btn sec-btn hide" id="aguaSugestao">Começar com 2 L de água pura (ajustável)</button>
+        <div class="row">
+          <div><label for="aguaMetaValor">ml por dia</label><input id="aguaMetaValor" type="number" inputmode="numeric" min="500" max="6000" placeholder="2000"></div>
+          <div><label for="aguaMetaOrigem">Origem</label>
+            <select id="aguaMetaOrigem"><option value="manual">Eu defino</option><option value="profissional">Profissional de saúde</option><option value="nenhuma">Sem meta</option></select></div>
+        </div>
+        <div class="row">
+          <div><label for="aguaMetaEscopo">Conta</label>
+            <select id="aguaMetaEscopo"><option value="agua_pura">Só água pura</option><option value="bebidas_total">Todas as bebidas</option></select></div>
+          <div><label for="aguaMetaSentido">Tipo</label>
+            <select id="aguaMetaSentido"><option value="meta">Meta de hábito</option><option value="limite">Limite diário (restrição)</option></select></div>
+        </div>
+        <div class="preview err" id="aguaMetaErro" role="alert"></div>
+        <button type="button" class="btn sec-btn" id="aguaMetaSalvar">Salvar meta de água</button>
+        <p class="hint" id="aguaRef">Referência <a href="https://www.efsa.europa.eu/en/efsajournal/pub/1459" target="_blank" rel="noopener">EFSA</a> (temperatura e atividade moderadas): cerca de 2,0 L/dia para mulheres e 2,5 L/dia para homens de <b>água total</b>, somando alimentos e todas as bebidas, não só água pura. Calor e treino pedem individualização. A meta do app é um hábito ajustável, não mede seu estado de hidratação. Com restrição de líquidos ou doença renal, siga o limite do seu profissional.</p>
+      </div>
+    </details>
   </section>
   </main>
 
