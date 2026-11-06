@@ -1,0 +1,11 @@
+# Sistema
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editores
+.vscode/
+.idea/
+
+# Cópias de segurança de dados pessoais do app
+diario-calorias*.json

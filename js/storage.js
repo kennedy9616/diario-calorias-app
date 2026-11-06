@@ -1,0 +1,331 @@
+/* ==========================================================
+   Armazenamento dos dados
+   1) Sempre: no próprio navegador (localStorage), automático.
+   2) Opcional: num arquivo .json numa pasta do computador, gravado
+      a cada mudança (Chrome e Edge no computador).
+      Em outros navegadores, use "Baixar cópia de segurança".
+   ========================================================== */
+
+const LSKEY = "diario-calorias:v1";
+const LS_OK = (() => {
+  try { localStorage.setItem("dc-teste", "1"); localStorage.removeItem("dc-teste"); return true; }
+  catch (e) { return false; }
+})();
+const FS_OK = typeof window.showSaveFilePicker === "function";
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const STANDALONE = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+const WHERE = (IOS || STANDALONE) ? "no celular" : "no navegador";
+
+let fileHandle = null;
+let fileState = "none";   // none | ok | permission | error
+
+/* ---------- Formato dos dados ---------- */
+function snapshot() {
+  return { app: "diario-calorias", versao: 1, savedAt, profile, days };
+}
+function validData(d) {
+  return d && typeof d === "object" && (d.profile || d.days);
+}
+function cleanDays(src) {
+  const out = {};
+  Object.keys(src || {}).forEach(k => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+    const d = src[k] || {};
+    out[k] = { foods: Array.isArray(d.foods) ? d.foods : [], ex: Array.isArray(d.ex) ? d.ex : [], tdee: d.tdee };
+  });
+  return out;
+}
+function replaceWith(d) {
+  profile = Object.assign(clone(DEFAULT_PROFILE), d.profile || {});
+  if (!Array.isArray(profile.customFoods)) profile.customFoods = [];
+  days = cleanDays(d.days);
+  savedAt = d.savedAt || null;
+}
+// junta sem perder nada dos dois lados (usado ao abrir um arquivo)
+function mergeIn(d) {
+  if (d.profile) {
+    const keep = profile.customFoods || [];
+    profile = Object.assign(clone(DEFAULT_PROFILE), profile, d.profile);
+    const have = new Set(keep.map(f => norm(f.n)));
+    const incoming = Array.isArray(d.profile.customFoods) ? d.profile.customFoods : [];
+    profile.customFoods = keep.concat(incoming.filter(f => f && f.n && !have.has(norm(f.n))));
+  }
+  const inc = cleanDays(d.days);
+  Object.keys(inc).forEach(k => {
+    const mine = days[k] || { foods: [], ex: [], tdee: inc[k].tdee };
+    const ids = new Set(mine.foods.concat(mine.ex).map(x => x.id));
+    inc[k].foods.forEach(f => { if (!ids.has(f.id)) mine.foods.push(f); });
+    inc[k].ex.forEach(e => { if (!ids.has(e.id)) mine.ex.push(e); });
+    if (mine.tdee == null) mine.tdee = inc[k].tdee;
+    days[k] = mine;
+  });
+}
+
+/* ---------- Salvar ---------- */
+let fileTimer = null, writing = false, writeAgain = false;
+
+function persist() {
+  savedAt = new Date().toISOString();
+  if (LS_OK) {
+    try { localStorage.setItem(LSKEY, JSON.stringify(snapshot())); }
+    catch (e) { toast("Não consegui salvar no navegador (" + errMsg(e) + "). Baixe uma cópia de segurança."); }
+  }
+  clearTimeout(fileTimer);
+  fileTimer = setTimeout(writeFile, 300);
+  setStatus();
+}
+
+async function writeFile() {
+  if (!fileHandle || fileState !== "ok") return;
+  if (writing) { writeAgain = true; return; }
+  writing = true;
+  try {
+    const w = await fileHandle.createWritable();
+    await w.write(JSON.stringify(snapshot(), null, 1));
+    await w.close();
+  } catch (e) {
+    console.error(e);
+    fileState = (e && e.name === "NotAllowedError") ? "permission" : "error";
+    toast("Não consegui gravar no arquivo (" + errMsg(e) + "). Os dados continuam salvos no navegador.");
+  }
+  writing = false;
+  setStatus();
+  if (writeAgain) { writeAgain = false; writeFile(); }
+}
+
+function saveDay(k = cur) {
+  const d = days[k];
+  if (!d) return;
+  if (k === TODAY || d.tdee == null) d.tdee = Math.round(tdee());
+  persist();
+}
+
+let profTimer;
+function saveProfile() {
+  clearTimeout(profTimer);
+  profTimer = setTimeout(persist, 500);
+}
+
+// carrega o que estiver salvo no navegador; devolve true se havia dados
+function loadSaved() {
+  if (!LS_OK) return false;
+  try {
+    const raw = localStorage.getItem(LSKEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      if (validData(d)) { replaceWith(d); return true; }
+    }
+  } catch (e) {
+    console.error(e);
+    toast("Não consegui ler os dados salvos (" + errMsg(e) + ").");
+  }
+  return false;
+}
+
+/* ---------- IndexedDB: lembra do arquivo usado da última vez ---------- */
+function idb() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open("diario-calorias", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("kv");
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function idbGet(k) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const q = db.transaction("kv").objectStore("kv").get(k);
+    q.onsuccess = () => res(q.result);
+    q.onerror = () => rej(q.error);
+  });
+}
+async function idbSet(k, v) {
+  const db = await idb();
+  return new Promise((res, rej) => {
+    const t = db.transaction("kv", "readwrite");
+    t.objectStore("kv").put(v, k);
+    t.oncomplete = () => res();
+    t.onerror = () => rej(t.error);
+  });
+}
+
+/* ---------- Arquivo de dados no computador ---------- */
+const PICK_TYPES = [{ description: "Dados do Diário de Calorias", accept: { "application/json": [".json"] } }];
+
+async function readHandle(h) {
+  const txt = await (await h.getFile()).text();
+  return txt.trim() ? JSON.parse(txt) : null;
+}
+
+async function createFile() {
+  try {
+    const h = await window.showSaveFilePicker({ suggestedName: "diario-calorias.json", types: PICK_TYPES });
+    fileHandle = h;
+    fileState = "ok";
+    try { await idbSet("arquivo", h); } catch (_) { /* sem IndexedDB: só não lembra na próxima vez */ }
+    persist();
+    await writeFile();
+    toast("Arquivo criado: " + h.name + ". Tudo o que você registrar é gravado nele.", 3600);
+  } catch (e) {
+    if (e && e.name !== "AbortError") toast("Não consegui criar o arquivo (" + errMsg(e) + ").");
+  }
+}
+
+async function openFile() {
+  if (!FS_OK) { $("fileIn").value = ""; $("fileIn").click(); return; }
+  try {
+    const [h] = await window.showOpenFilePicker({ types: PICK_TYPES, multiple: false });
+    const data = await readHandle(h);
+    if (data && !validData(data)) { toast("Esse arquivo não é do Diário de Calorias."); return; }
+    if (data) mergeIn(data);
+    // pede permissão de gravação para continuar salvando nesse arquivo
+    const perm = h.requestPermission ? await h.requestPermission({ mode: "readwrite" }) : "granted";
+    if (perm === "granted") {
+      fileHandle = h;
+      fileState = "ok";
+      try { await idbSet("arquivo", h); } catch (_) { /* idem */ }
+    }
+    persist(); renderProfile(); renderAll();
+    toast(perm === "granted"
+      ? "Arquivo aberto. Os registros agora são gravados em " + h.name + "."
+      : "Dados carregados (sem permissão para gravar no arquivo).", 3600);
+  } catch (e) {
+    if (e && e.name !== "AbortError") toast("Não consegui abrir o arquivo (" + errMsg(e) + ").");
+  }
+}
+
+// alternativa para navegadores sem acesso direto a arquivos (Safari, Firefox, celulares)
+async function openFromInput() {
+  const f = $("fileIn").files[0];
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (!validData(data)) { toast("Esse arquivo não é do Diário de Calorias."); return; }
+    mergeIn(data); persist(); renderProfile(); renderAll();
+    toast("Dados do arquivo carregados.");
+  } catch (e) {
+    toast("Não consegui ler o arquivo (" + errMsg(e) + ").");
+  }
+}
+
+async function reconnect() {
+  if (!fileHandle) return;
+  try {
+    const perm = await fileHandle.requestPermission({ mode: "readwrite" });
+    if (perm !== "granted") { toast("Sem permissão, os dados ficam só no navegador."); return; }
+    await syncFromFile();
+    toast("Arquivo reconectado: " + fileHandle.name + ".");
+  } catch (e) {
+    fileState = "error"; setStatus();
+    toast("Não consegui reconectar (" + errMsg(e) + ").");
+  }
+}
+
+// ao reabrir: o que for mais recente (navegador ou arquivo) vale
+async function syncFromFile() {
+  const data = await readHandle(fileHandle);
+  fileState = "ok";
+  if (data && validData(data) && (!savedAt || (data.savedAt && data.savedAt > savedAt))) {
+    replaceWith(data);
+    if (LS_OK) { try { localStorage.setItem(LSKEY, JSON.stringify(snapshot())); } catch (_) { /* segue só com o arquivo */ } }
+    renderProfile(); renderAll(); setStatus();
+  } else {
+    setStatus();
+    await writeFile();
+  }
+}
+
+// lembra do arquivo de dados usado da última vez (Chrome/Edge)
+async function restoreFileHandle() {
+  if (!FS_OK || !window.indexedDB) return;
+  try {
+    const h = await idbGet("arquivo");
+    if (!h) return;
+    fileHandle = h;
+    const perm = await h.queryPermission({ mode: "readwrite" });
+    if (perm === "granted") await syncFromFile();
+    else { fileState = "permission"; setStatus(); }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+/* ---------- Cópia de segurança ---------- */
+async function downloadBackup() {
+  const txt = JSON.stringify(snapshot(), null, 1);
+  const name = `diario-calorias-${TODAY}.json`;
+  // no iPhone: abre o menu Compartilhar, onde dá para escolher "Salvar em Arquivos"
+  if (IOS && navigator.canShare) {
+    try {
+      const file = new File([txt], name, { type: "application/json" });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Diário de Calorias" });
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      console.error(e);
+    }
+  }
+  const blob = new Blob([txt], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast("Cópia baixada na pasta de downloads.");
+}
+
+/* ---------- Indicador "Salvo…" e menu ---------- */
+function setStatus() {
+  const s = $("status");
+  s.classList.remove("warn", "ok");
+  let txt, info;
+  if (fileState === "ok") {
+    txt = "Salvo no computador"; s.classList.add("ok");
+    info = `Gravando em <b>${escapeHtml(fileHandle.name)}</b> a cada registro, e também no navegador.`;
+  } else if (fileState === "permission") {
+    txt = "Reconectar arquivo"; s.classList.add("warn");
+    info = `Os dados estão salvos no navegador. Para continuar gravando em <b>${escapeHtml(fileHandle.name)}</b>, toque em "Reconectar o arquivo".`;
+  } else if (fileState === "error") {
+    txt = "Erro no arquivo"; s.classList.add("warn");
+    info = "Não consegui gravar no arquivo. Os dados continuam salvos no navegador. Crie ou abra o arquivo de novo.";
+  } else if (LS_OK) {
+    txt = "Salvo " + WHERE;
+    if (IOS && !STANDALONE) {
+      info = "Os dados ficam salvos neste Safari. Para usar como app, toque em Compartilhar › <b>Adicionar à Tela de Início</b> e use sempre pelo ícone (o app e o Safari guardam dados separados).";
+    } else if (IOS) {
+      info = "Os dados ficam salvos no celular, dentro deste app. De vez em quando, use \"Baixar cópia de segurança\" e escolha <b>Salvar em Arquivos</b>.";
+    } else if (FS_OK) {
+      info = "Os dados ficam salvos neste navegador, neste aparelho. Para ter também um arquivo numa pasta sua, crie um arquivo de dados.";
+    } else {
+      info = "Os dados ficam salvos neste navegador, neste aparelho. Este navegador não grava direto numa pasta: use \"Baixar cópia de segurança\" de vez em quando (no Chrome ou Edge do computador dá para gravar automático).";
+    }
+  } else {
+    txt = "Não está salvando"; s.classList.add("warn");
+    info = "Este navegador bloqueou o armazenamento (janela anônima?). Baixe uma cópia de segurança antes de fechar.";
+  }
+  s.textContent = txt + " ▾";
+  $("mInfo").innerHTML = info;
+  $("mReconnect").classList.toggle("hide", fileState !== "permission");
+  $("mNew").classList.toggle("hide", !FS_OK);
+}
+
+const closeMenu = () => $("modeMenu").classList.remove("open");
+
+function initStorageMenu() {
+  $("status").onclick = e => {
+    e.stopPropagation();
+    if (fileState === "permission") { closeMenu(); reconnect(); return; }
+    $("modeMenu").classList.toggle("open");
+  };
+  $("modeMenu").onclick = e => e.stopPropagation();
+  document.addEventListener("click", closeMenu);
+  $("mReconnect").onclick = () => { closeMenu(); reconnect(); };
+  $("mNew").onclick = () => { closeMenu(); createFile(); };
+  $("mOpen").onclick = () => { closeMenu(); openFile(); };
+  $("mDown").onclick = () => { closeMenu(); downloadBackup(); };
+  $("fileIn").addEventListener("change", openFromInput);
+}

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Diário de Calorias</title>
+  <meta name="description" content="Registre alimentos e exercícios e acompanhe seu saldo calórico do dia. Funciona no celular e sem internet.">
+
+  <!-- Instalação como app (Android e iPhone) -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Calorias">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#141716" media="(prefers-color-scheme: dark)">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+
+  <!-- Fonte e estilos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Scripts (a ordem importa) -->
+  <script defer src="js/data.js"></script>
+  <script defer src="js/utils.js"></script>
+  <script defer src="js/state.js"></script>
+  <script defer src="js/storage.js"></script>
+  <script defer src="js/render.js"></script>
+  <script defer src="js/forms.js"></script>
+  <script defer src="js/install.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Diário de Calorias</h1>
+    <button type="button" class="status" id="status" aria-haspopup="true">Carregando…</button>
+    <div class="modemenu" id="modeMenu" role="menu">
+      <div class="info" id="mInfo"></div>
+      <button type="button" id="mInstall" class="hide"><b>Instalar na tela inicial</b><small>Abre como um app, com ícone próprio, e funciona sem internet.</small></button>
+      <button type="button" id="mReconnect" class="hide"><b>Reconectar o arquivo</b><small>O navegador pede sua permissão de novo a cada vez que você abre a página.</small></button>
+      <button type="button" id="mNew"><b>Criar arquivo de dados</b><small>Escolha uma pasta do computador. Tudo o que você registrar é gravado nele na hora.</small></button>
+      <button type="button" id="mOpen"><b>Abrir arquivo de dados</b><small>Carrega um arquivo .json salvo antes (de outro aparelho, por exemplo).</small></button>
+      <button type="button" id="mDown"><b>Baixar cópia de segurança</b><small>Baixa um arquivo .json com todos os seus registros.</small></button>
+    </div>
+    <input type="file" id="fileIn" accept=".json,application/json" class="hide">
+  </header>
+
+  <!-- Convite para instalar o app -->
+  <div class="installbar hide" id="installBar">
+    <img src="icons/icon-192.png" alt="" width="40" height="40">
+    <div class="txt"><b>Instale o app</b><small id="installTxt"></small></div>
+    <button type="button" class="ibtn hide" id="installBtn">Instalar</button>
+    <button type="button" class="x" id="installClose" aria-label="Fechar">×</button>
+  </div>
+
+  <div class="datenav">
+    <button type="button" id="prev" aria-label="Dia anterior">‹</button>
+    <div class="d" id="dateLbl"></div>
+    <button type="button" id="next" aria-label="Próximo dia">›</button>
+  </div>
+
+  <!-- Resumo do dia -->
+  <section class="card">
+    <div class="balance none" id="balance">
+      <div class="lbl" id="balLbl">Sem registros neste dia</div>
+      <div class="big num" id="balVal">—</div>
+    </div>
+    <div class="grid">
+      <div class="stat"><div class="k">Consumido</div><div class="v num" id="sCons">0</div></div>
+      <div class="stat"><div class="k">Gasto total</div><div class="v num" id="sGasto">0</div></div>
+      <div class="stat"><div class="k">Basal (TMB)</div><div class="v num" id="sTmb">0</div></div>
+      <div class="stat"><div class="k">Exercícios</div><div class="v num" id="sEx">0</div></div>
+    </div>
+    <div class="macros">
+      <div>Carboidratos<br><b class="num" id="sCarb">0 g</b></div>
+      <div>Proteínas<br><b class="num" id="sProt">0 g</b></div>
+    </div>
+    <div id="metaBox" class="hide">
+      <div class="bar" id="metaBar"><i id="metaFill"></i></div>
+      <div class="barlbl"><span id="metaTxt"></span><span id="metaRest"></span></div>
+    </div>
+  </section>
+
+  <!-- Registro de alimentos e exercícios -->
+  <section class="card">
+    <div class="tabs">
+      <button type="button" class="on" data-tab="food">Alimentação</button>
+      <button type="button" data-tab="ex">Exercícios</button>
+    </div>
+
+    <div id="tab-food">
+      <div class="field">
+        <label for="foodName">Alimento</label>
+        <input id="foodName" autocomplete="off" placeholder="Ex.: arroz, frango, banana…">
+        <div class="sugg" id="sugg"></div>
+      </div>
+      <div class="custom" id="customBox">
+        <p>Alimento fora da lista. Informe os valores por 100 g (veja no rótulo); ele fica salvo para as próximas vezes.</p>
+        <div class="row">
+          <div><label for="cKcal">kcal / 100 g</label><input id="cKcal" type="number" inputmode="decimal" min="0"></div>
+          <div><label for="cCarb">Carb. (g)</label><input id="cCarb" type="number" inputmode="decimal" min="0" placeholder="opcional"></div>
+          <div><label for="cProt">Prot. (g)</label><input id="cProt" type="number" inputmode="decimal" min="0" placeholder="opcional"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="w2"><label for="qty">Quantidade</label><input id="qty" type="number" inputmode="decimal" min="0" step="any" placeholder="150"></div>
+        <div><label for="unit">Unidade</label>
+          <select id="unit"><option value="g">g</option><option value="kg">kg</option><option value="ml">ml</option></select></div>
+      </div>
+      <div class="field">
+        <label for="meal">Refeição</label>
+        <select id="meal">
+          <option>Café da manhã</option><option>Lanche da manhã</option><option>Almoço</option>
+          <option>Lanche da tarde</option><option>Jantar</option><option>Ceia</option>
+        </select>
+      </div>
+      <div class="preview" id="foodPrev"></div>
+      <button type="button" class="btn" id="addFood" disabled>Adicionar alimento</button>
+      <div class="list" id="foodList"></div>
+    </div>
+
+    <div id="tab-ex" class="hide">
+      <div class="field">
+        <label for="exType">Atividade</label>
+        <select id="exType"></select>
+      </div>
+      <div class="row">
+        <div><label for="exInt">Intensidade</label>
+          <select id="exInt"><option value="0">Leve</option><option value="1" selected>Moderada</option><option value="2">Intensa</option></select></div>
+        <div><label for="exMin">Tempo (min)</label><input id="exMin" type="number" inputmode="numeric" min="0" placeholder="40"></div>
+      </div>
+      <div class="hint" id="exDesc"></div>
+      <div class="preview" id="exPrev"></div>
+      <button type="button" class="btn" id="addEx" disabled>Adicionar exercício</button>
+      <div class="list" id="exList"></div>
+    </div>
+  </section>
+
+  <!-- Últimos 7 dias -->
+  <section class="card chart">
+    <h2>Últimos 7 dias <span>saldo do dia</span></h2>
+    <div id="chart"></div>
+    <div class="legend"><span><i class="def"></i>Déficit</span><span><i class="sur"></i>Superávit</span></div>
+  </section>
+
+  <!-- Dados pessoais -->
+  <section class="card">
+    <details id="profBox">
+      <summary>Meus dados <span id="profSum"></span></summary>
+      <div class="prof-body">
+        <div class="row">
+          <div><label for="pPeso">Peso (kg)</label><input id="pPeso" type="number" inputmode="decimal" step="0.1"></div>
+          <div><label for="pAlt">Altura (cm)</label><input id="pAlt" type="number" inputmode="numeric"></div>
+          <div><label for="pIdade">Idade</label><input id="pIdade" type="number" inputmode="numeric"></div>
+        </div>
+        <div class="row">
+          <div><label for="pSexo">Sexo</label><select id="pSexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></div>
+          <div class="w2"><label for="pFator">Rotina fora dos exercícios</label>
+            <select id="pFator">
+              <option value="1.2">Sedentária (×1,2)</option>
+              <option value="1.3">Pouco ativa, em pé às vezes (×1,3)</option>
+              <option value="1.4">Ativa, muito tempo em pé (×1,4)</option>
+            </select></div>
+        </div>
+        <p class="hint">Os exercícios são somados à parte, então escolha a rotina <b>sem</b> contar treinos — senão eles entram duas vezes.</p>
+        <div class="field">
+          <label for="pMeta">Meta diária de consumo (kcal)</label>
+          <input id="pMeta" type="number" inputmode="numeric" placeholder="A definida pelo seu médico ou nutricionista">
+        </div>
+        <p class="hint" id="tmbInfo"></p>
+      </div>
+    </details>
+  </section>
+
+  <footer>
+    TMB pela equação de Mifflin-St Jeor. Calorias dos alimentos são aproximadas por 100 g, com base na Tabela TACO (Unicamp) e em rótulos médios. Gasto dos exercícios pelo Compendium of Physical Activities (METs), contando só o gasto <i>extra</i> além do basal, para não somar o basal duas vezes. É uma estimativa para acompanhamento — metas e ajustes vêm da sua equipe de saúde.
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
