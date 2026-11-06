@@ -39,7 +39,7 @@ const FOODS = [
 const EXS = [
   { id: "caminhada", n: "Caminhada", m: [3.0, 4.3, 5.0], d: ["passo tranquilo, ~4 km/h", "passo firme, ~5,5 km/h", "passo acelerado, ~6,5 km/h"] },
   { id: "corrida", n: "Corrida / trote", m: [7.0, 9.0, 11.0], d: ["trote, ~7 km/h", "~9 km/h", "~11 km/h ou mais"] },
-  { id: "academia", n: "Academia (musculação)", m: [3.5, 5.0, 6.0], d: ["cargas leves, descanso longo", "treino normal", "pesado, pouco descanso"] },
+  { id: "academia", n: "Academia (musculação)", forca: true, m: [3.5, 5.0, 6.0], d: ["cargas leves, descanso longo", "treino normal", "pesado, pouco descanso"] },
   { id: "funcional", n: "Funcional / HIIT", m: [4.3, 6.0, 8.0], d: ["circuito leve", "circuito moderado", "HIIT, muito ofegante"] },
   { id: "bike", n: "Bicicleta", m: [4.0, 6.8, 8.0], d: ["passeio, <16 km/h", "16–19 km/h", "19–22 km/h"] },
   { id: "bikeind", n: "Bicicleta ergométrica / spinning", m: [3.5, 6.8, 8.8], d: ["carga leve", "carga moderada", "spinning intenso"] },
@@ -71,7 +71,7 @@ const NUTRIENTES = [
   { k: "potassio_mg", n: "Potássio", u: "mg" }
 ];
 // posição de cada nutriente no array (NUT.kcal = 0, NUT.carb = 1, ...)
-const NUT = { kcal: 0, carb: 1, prot: 2, gord: 3, fibra: 4, sodio: 5 };
+const NUT = { kcal: 0, carb: 1, prot: 2, gord: 3, fibra: 4, sodio: 5, acucar: 6, gsat: 7, colest: 8, calcio: 9, ferro: 10, potassio: 11 };
 
 // A base do USDA está em inglês. Buscar em português também procura estas traduções
 // (ex.: "frango" encontra "Chicken, breast..."). Chaves sem acento. A tradução precisa

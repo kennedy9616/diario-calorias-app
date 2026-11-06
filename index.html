@@ -32,6 +32,8 @@
   <script defer src="js/render.js"></script>
   <script defer src="js/forms.js"></script>
   <script defer src="js/body.js"></script>
+  <script defer src="js/metas.js"></script>
+  <script defer src="js/analytics.js"></script>
   <script defer src="js/install.js"></script>
   <script defer src="js/nav.js"></script>
   <script defer src="js/app.js"></script>
@@ -100,6 +102,7 @@
       <div class="bar" id="metaBar"><i id="metaFill"></i></div>
       <div class="barlbl"><span id="metaTxt"></span><span id="metaRest"></span></div>
     </div>
+    <label class="chk completo"><input type="checkbox" id="diaCompleto"> Registrei tudo o que comi neste dia</label>
   </section>
 
   <!-- Registro de alimentos e exercícios -->
@@ -169,11 +172,95 @@
 
   <!-- ===== Aba Analytics ===== -->
   <main id="view-analytics" class="view hide">
+  <!-- Resumo analítico do dia -->
+  <section class="card">
+    <h2>Resumo do dia <span>registrado</span></h2>
+    <div class="grid">
+      <div class="stat"><div class="k">Consumo</div><div class="v num" id="anCons">—</div><div class="sub" id="anConsSub"></div></div>
+      <div class="stat"><div class="k">Diferença da meta</div><div class="v num" id="anDif">—</div><div class="sub" id="anDifSub"></div></div>
+      <div class="stat"><div class="k">Déficit estimado</div><div class="v num" id="anDef">—</div><div class="sub" id="anDefSub"></div></div>
+      <div class="stat"><div class="k">Proteína</div><div class="v num" id="anProt">—</div><div class="sub" id="anProtSub"></div></div>
+    </div>
+    <div class="bar" aria-hidden="true"><i id="anProtFill"></i></div>
+    <div class="barlbl"><span>Proteína em relação à meta</span></div>
+    <table class="ntab" id="anNutri"></table>
+    <p class="hint" id="anVit">Vitaminas: a base de alimentos atual (TACO e USDA compactadas) não traz vitaminas, então o app ainda não as soma. “—” = sem dado na fonte (não é zero); “≥” = soma parcial.</p>
+  </section>
+
+  <!-- Semana -->
+  <section class="card chart">
+    <h2>Semana <span id="anSemLbl"></span></h2>
+    <div id="anChart" class="chartbox"></div>
+    <div class="legend"><span><i class="def"></i>Dia completo</span><span><i class="hol"></i>Parcial</span><span><i class="ln mt"></i>Meta do dia</span></div>
+    <div class="grid an-stats">
+      <div class="stat"><div class="k">Regularidade</div><div class="v num" id="anReg">—</div><div class="sub" id="anRegSub"></div></div>
+      <div class="stat"><div class="k">Consumo médio</div><div class="v num" id="anMedia">—</div><div class="sub" id="anMediaSub"></div></div>
+      <div class="stat"><div class="k">Atividade</div><div class="v num" id="anAtiv">—</div><div class="sub" id="anAtivSub"></div></div>
+      <div class="stat"><div class="k">Força</div><div class="v num" id="anForca">—</div><div class="sub" id="anForcaSub"></div></div>
+    </div>
+    <details class="tbl"><summary>Ver em tabela</summary><table class="ntab" id="anTabela"></table></details>
+  </section>
+
   <!-- Últimos 7 dias -->
   <section class="card chart">
-    <h2>Últimos 7 dias <span>saldo do dia</span></h2>
+    <h2>Saldo estimado <span>só dias completos</span></h2>
     <div id="chart"></div>
     <div class="legend"><span><i class="def"></i>Déficit</span><span><i class="sur"></i>Superávit</span></div>
+  </section>
+
+  <!-- Metas e objetivo -->
+  <section class="card">
+    <details id="metasBox">
+      <summary>Metas e objetivo <span id="metasSum"></span></summary>
+      <div class="prof-body">
+        <p class="hint">Metas são estimativas ajustáveis, não prescrição. Valide com nutricionista ou médico. Cada meta vale a partir do dia em que foi salva; os dias anteriores continuam comparados com a meta da época.</p>
+        <div class="row">
+          <div><label for="mtObjetivo">Objetivo</label>
+            <select id="mtObjetivo"><option value="manter">Manter o peso</option><option value="perder">Perder peso</option></select></div>
+          <div><label for="mtTreinoTipo">Treino</label>
+            <select id="mtTreinoTipo"><option value="nenhum">Não treino</option><option value="aerobico">Aeróbico</option><option value="forca">Força</option><option value="misto">Misto</option></select></div>
+        </div>
+        <div class="row">
+          <div><label for="mtTreinoDias">Dias/semana</label><input id="mtTreinoDias" type="number" inputmode="numeric" min="0" max="7"></div>
+          <div><label for="mtTreinoMin">Min/treino</label><input id="mtTreinoMin" type="number" inputmode="numeric" min="0" max="600"></div>
+          <div><label for="mtTreinoInt">Intensidade</label>
+            <select id="mtTreinoInt"><option value="leve">Leve</option><option value="moderada">Moderada</option><option value="vigorosa">Vigorosa</option></select></div>
+        </div>
+        <p class="hint">O treino serve para escolher o critério de proteína. Ele não muda o gasto: os exercícios registrados já são somados à parte.</p>
+
+        <h3 class="sec">Calorias</h3>
+        <p class="hint" id="mtKAtual"></p>
+        <div class="row">
+          <div><label for="mtKOrigem">Origem da meta</label>
+            <select id="mtKOrigem"><option value="nenhuma">Sem meta</option><option value="estimada">Estimativa do app</option><option value="profissional">Profissional de saúde</option><option value="manual">Eu defino</option></select></div>
+          <div id="mtKDefBox" class="hide"><label for="mtKDef">Déficit planejado</label>
+            <select id="mtKDef"><option value="0">0% (manter)</option><option value="0.1">10%</option><option value="0.15">15%</option></select></div>
+          <div id="mtKValorBox" class="hide"><label for="mtKValor">kcal/dia</label><input id="mtKValor" type="number" inputmode="numeric" min="500" max="10000"></div>
+        </div>
+        <p class="hint">Estimativa = TMB × rotina × (1 − déficit). 10–15% é uma proposta inicial do app, não recomendação universal. O app não promete perda linear nem data para atingir um peso.</p>
+        <div class="preview err" id="mtKErro" role="alert"></div>
+        <button type="button" class="btn sec-btn" id="mtKSalvar">Salvar meta de calorias</button>
+
+        <h3 class="sec">Proteína</h3>
+        <p class="hint" id="mtPAtual"></p>
+        <div class="row">
+          <div class="w2"><label for="mtPCrit">Critério</label>
+            <select id="mtPCrit">
+              <option value="nenhuma">Sem meta</option>
+              <option value="efsa">0,83 g/kg · EFSA, referência populacional</option>
+              <option value="issn14">1,4 g/kg · ISSN, treino regular</option>
+              <option value="issn16">1,6 g/kg · ISSN, treino regular</option>
+              <option value="issn18">1,8 g/kg · ISSN, treino regular</option>
+              <option value="issn20">2,0 g/kg · ISSN, treino regular</option>
+              <option value="profissional">Profissional de saúde (g/dia)</option>
+            </select></div>
+          <div id="mtPValorBox" class="hide"><label for="mtPValor">g/dia</label><input id="mtPValor" type="number" inputmode="decimal" min="10" max="400"></div>
+        </div>
+        <p class="hint">Usa o peso de referência (aba Histórico). Referência populacional não é meta de hipertrofia. Com IMC de 30 ou mais, coeficientes altos só com profissional.</p>
+        <div class="preview err" id="mtPErro" role="alert"></div>
+        <button type="button" class="btn sec-btn" id="mtPSalvar">Salvar meta de proteína</button>
+      </div>
+    </details>
   </section>
 
   </main>
@@ -255,10 +342,7 @@
           <label class="chk"><input type="checkbox" id="condLiquidos"> Restrição de líquidos</label>
           <p class="hint">Com alguma delas, ou fora de 18 a 64 anos, o app não sugere metas automáticas: defina-as com sua equipe de saúde.</p>
         </fieldset>
-        <div class="field">
-          <label for="pMeta">Meta diária de consumo (kcal)</label>
-          <input id="pMeta" type="number" inputmode="numeric" placeholder="A definida pelo seu médico ou nutricionista">
-        </div>
+        <p class="hint">Metas de calorias e proteína ficam na aba <b>Analytics</b>, com histórico.</p>
         <p class="hint" id="tmbInfo"></p>
       </div>
     </details>

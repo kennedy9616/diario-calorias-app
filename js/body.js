@@ -212,8 +212,8 @@ function renderPesoChart() {
     g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${c("--line")}" stroke-width="1"/>`;
     g += `<text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end" font-size="10" fill="${c("--muted")}" ${font}>${fmt1(v)}</text>`;
   });
-  [0, Math.floor((s.length - 1) / 2), s.length - 1].forEach(i => {
-    g += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle" font-size="10" fill="${c("--muted")}" ${font}>${dm(s[i].data)}</text>`;
+  [0, Math.floor((s.length - 1) / 2), s.length - 1].forEach((i, j) => {
+    g += `<text x="${x(i)}" y="${H - 6}" text-anchor="${["start", "middle", "end"][j]}" font-size="10" fill="${c("--muted")}" ${font}>${dm(s[i].data)}</text>`;
   });
   // linha da média, com quebra onde não há dados suficientes
   let d = "", aberto = false;
