@@ -20,11 +20,13 @@ let fileHandle = null;
 let fileState = "none";   // none | ok | permission | error
 
 /* ---------- Formato dos dados ---------- */
+// versao 2: alimentos cadastrados no schema da base (data/alimentos_unificados.json)
 function snapshot() {
-  return { app: "diario-calorias", versao: 1, savedAt, profile, days };
+  return { app: "diario-calorias", versao: 2, savedAt, profile, days };
 }
+// backup do app (profile/days) ou arquivo de "Exportar alimentos cadastrados" (alimentos)
 function validData(d) {
-  return d && typeof d === "object" && (d.profile || d.days);
+  return !!d && typeof d === "object" && !Array.isArray(d) && !!(d.profile || d.days || Array.isArray(d.alimentos));
 }
 function cleanDays(src) {
   const out = {};
@@ -37,7 +39,7 @@ function cleanDays(src) {
 }
 function replaceWith(d) {
   profile = Object.assign(clone(DEFAULT_PROFILE), d.profile || {});
-  if (!Array.isArray(profile.customFoods)) profile.customFoods = [];
+  profile.customFoods = cleanCustomFoods(profile.customFoods);
   days = cleanDays(d.days);
   savedAt = d.savedAt || null;
 }
@@ -46,10 +48,10 @@ function mergeIn(d) {
   if (d.profile) {
     const keep = profile.customFoods || [];
     profile = Object.assign(clone(DEFAULT_PROFILE), profile, d.profile);
-    const have = new Set(keep.map(f => norm(f.n)));
-    const incoming = Array.isArray(d.profile.customFoods) ? d.profile.customFoods : [];
-    profile.customFoods = keep.concat(incoming.filter(f => f && f.n && !have.has(norm(f.n))));
+    // os seus primeiro; do arquivo, só os que ainda não existem (pelo nome)
+    profile.customFoods = cleanCustomFoods(keep.concat(Array.isArray(d.profile.customFoods) ? d.profile.customFoods : []));
   }
+  if (Array.isArray(d.alimentos)) profile.customFoods = cleanCustomFoods((profile.customFoods || []).concat(d.alimentos));
   const inc = cleanDays(d.days);
   Object.keys(inc).forEach(k => {
     const mine = days[k] || { foods: [], ex: [], tdee: inc[k].tdee };
@@ -178,6 +180,12 @@ async function openFile() {
     const data = await readHandle(h);
     if (data && !validData(data)) { toast("Esse arquivo não é do Diário de Calorias."); return; }
     if (data) mergeIn(data);
+    // Uma lista de alimentos é importada, sem virar o arquivo de gravação do diário.
+    if (data && Array.isArray(data.alimentos) && !data.profile && !data.days) {
+      persist(); renderProfile(); renderAll();
+      toast("Alimentos do arquivo carregados.");
+      return;
+    }
     // pede permissão de gravação para continuar salvando nesse arquivo
     const perm = h.requestPermission ? await h.requestPermission({ mode: "readwrite" }) : "granted";
     if (perm === "granted") {
@@ -250,11 +258,10 @@ async function restoreFileHandle() {
   }
 }
 
-/* ---------- Cópia de segurança ---------- */
-async function downloadBackup() {
-  const txt = JSON.stringify(snapshot(), null, 1);
-  const name = `diario-calorias-${TODAY}.json`;
-  // no iPhone: abre o menu Compartilhar, onde dá para escolher "Salvar em Arquivos"
+/* ---------- Baixar arquivos .json ---------- */
+// no iPhone abre o menu Compartilhar (dá para escolher "Salvar em Arquivos"); nos outros, baixa
+async function saveJsonFile(name, data, okMsg) {
+  const txt = JSON.stringify(data, null, 1);
   if (IOS && navigator.canShare) {
     try {
       const file = new File([txt], name, { type: "application/json" });
@@ -275,7 +282,22 @@ async function downloadBackup() {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  toast("Cópia baixada na pasta de downloads.");
+  toast(okMsg + " O arquivo está na pasta de downloads.", 3600);
+}
+
+function downloadBackup() {
+  return saveJsonFile(`diario-calorias-${TODAY}.json`, snapshot(), "Cópia de segurança baixada.");
+}
+
+function exportCustomFoods() {
+  const list = profile.customFoods || [];
+  if (!list.length) { toast("Você ainda não cadastrou nenhum alimento."); return; }
+  saveJsonFile(`alimentos-usuario-${TODAY}.json`, {
+    versao_schema: "1.0.0",
+    descricao: "Alimentos cadastrados no Diário de Calorias, no formato de data/alimentos_unificados.json. Para sugerir a inclusão na base do app, envie este arquivo numa issue do repositório.",
+    total_alimentos: list.length,
+    alimentos: list
+  }, `${list.length} alimento(s) exportado(s).`);
 }
 
 /* ---------- Indicador "Salvo…" e menu ---------- */
@@ -327,5 +349,6 @@ function initStorageMenu() {
   $("mNew").onclick = () => { closeMenu(); createFile(); };
   $("mOpen").onclick = () => { closeMenu(); openFile(); };
   $("mDown").onclick = () => { closeMenu(); downloadBackup(); };
+  $("mExport").onclick = () => { closeMenu(); exportCustomFoods(); };
   $("fileIn").addEventListener("change", openFromInput);
 }

@@ -223,7 +223,7 @@ h1 { font-size: 19px; margin: 0; font-weight: 800; letter-spacing: -.01em; }
 .macros { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .macros div {
   flex: 1;
-  min-width: 120px;
+  min-width: 88px;
   font-size: 13px;
   color: var(--muted);
   background: var(--chip);
@@ -231,6 +231,8 @@ h1 { font-size: 19px; margin: 0; font-weight: 800; letter-spacing: -.01em; }
   padding: 8px 10px;
 }
 .macros b { color: var(--ink); font-size: 15px; }
+.micro { font-size: 12.5px; color: var(--muted); margin-top: 8px; text-align: center; }
+.micro-hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; text-align: center; }
 
 .bar { height: 10px; background: var(--chip); border-radius: 99px; overflow: hidden; margin-top: 12px; }
 .bar i { display: block; width: 0; height: 100%; background: var(--accent); border-radius: 99px; transition: width .3s; }
@@ -282,14 +284,16 @@ select:focus { border-color: var(--accent); }
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
   z-index: 5;
-  max-height: 280px;
+  max-height: 340px;
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
   display: none;
 }
 .sugg.open { display: block; }
 .sugg button {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   width: 100%;
   text-align: left;
   background: none;
@@ -302,9 +306,38 @@ select:focus { border-color: var(--accent); }
   gap: 8px;
 }
 .sugg button:last-child { border-bottom: 0; }
-.sugg button small { color: var(--muted); white-space: nowrap; }
+.sugg .sn { flex: 1; min-width: 0; line-height: 1.3; }
+.sugg .sm { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: none; }
+.sugg button small { color: var(--muted); white-space: nowrap; font-size: 12px; }
 .sugg button:active,
 .sugg button:hover { background: var(--chip); }
+.sugg-note { font-size: 12px; color: var(--muted); padding: 9px 12px; text-align: center; }
+
+/* selo da fonte do alimento */
+.badge {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--chip);
+  color: var(--muted);
+}
+.badge.b-usuario,
+.badge.b-comunidade { background: var(--warn-soft); color: var(--amber); }
+.badge.b-taco,
+.badge.b-app { background: var(--accent-soft); color: var(--accent); }
+
+/* informação nutricional do alimento escolhido */
+.nutri { margin: -4px 0 12px; font-size: 13px; }
+.nutri summary { font-weight: 700; font-size: 13px; color: var(--accent); justify-content: flex-start; gap: 6px; }
+.nutri summary span { font-weight: 500; }
+.nutri table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.nutri td { padding: 5px 2px; border-bottom: 1px solid var(--line); }
+.nutri td.num { text-align: right; font-weight: 700; white-space: nowrap; }
+.nutri .hint { margin: 8px 0 0; }
 
 .preview { font-size: 13px; color: var(--muted); min-height: 18px; margin: -2px 0 10px; }
 .preview b { color: var(--ink); }
