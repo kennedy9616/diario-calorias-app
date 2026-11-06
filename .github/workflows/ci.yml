@@ -16,14 +16,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Base de alimentos gerada e atualizada
         run: perl tools/gerar-base.pl --verificar
 
       - name: Sintaxe do JavaScript
         run: for f in js/*.js sw.js; do node --check "$f" || exit 1; done
 
-      - name: Regressões de busca, dados e importação
-        run: node tools/smoke.cjs
+      - name: Testes de regressão (obrigatórios para entrar em develop/master)
+        run: node tools/test.cjs
 
       - name: JSON válidos
         run: |
