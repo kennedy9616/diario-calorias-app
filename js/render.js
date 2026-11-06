@@ -200,6 +200,7 @@ function renderAll() {
   renderChart();
   renderHistorico();
   renderAnalytics();
+  renderAgua();
   updateFoodPreview();
   updateExPreview();
 }

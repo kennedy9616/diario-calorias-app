@@ -154,7 +154,8 @@ function cleanMetas(list) {
       metodo: String(m.metodo || ""), fonte_url: typeof m.fonte_url === "string" ? m.fonte_url : null,
       versao: String(m.versao || METAS_VERSAO), data_calculo: m.data_calculo || null,
       vigencia_inicio: m.vigencia_inicio, vigencia_fim: m.vigencia_fim || null,
-      dados_utilizados: m.dados_utilizados && typeof m.dados_utilizados === "object" ? m.dados_utilizados : {}
+      dados_utilizados: m.dados_utilizados && typeof m.dados_utilizados === "object" ? m.dados_utilizados : {},
+      ...(m.tipo === "agua" ? { escopo: m.escopo === "bebidas_total" ? "bebidas_total" : "agua_pura", sentido: m.sentido === "limite" ? "limite" : "meta" } : {})
     }));
 }
 

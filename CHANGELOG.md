@@ -12,6 +12,7 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 - Aba Analytics: resumo do dia (consumo, diferença da meta, déficit estimado só em dia completo, proteína % da meta, carboidratos, gorduras, fibras, açúcares, colesterol e minerais), semana (calorias × meta do dia, regularidade, consumo médio dos dias completos, minutos equivalentes de atividade e dias de força) com visão em tabela.
 - Metas versionadas de calorias (estimativa com déficit 0/10/15%, profissional ou manual) e proteína (EFSA 0,83 g/kg ou ISSN 1,4–2,0 g/kg com treino regular), com método, fonte, vigência e dados usados. Cada dia é comparado com a meta vigente naquele dia.
 - Opção “Registrei tudo o que comi neste dia” (diário completo).
+- Aba Água: registro em ml (botões rápidos e volume livre), água pura e outras bebidas separadas, soma do dia, copo com o nível em relação à meta, últimos 7 dias e meta versionada (hábito ajustável ou limite de profissional; só água pura ou todas as bebidas), com a referência EFSA de água total. Volume muito alto gera aviso neutro; sem prêmio por excesso.
 
 
 ## [1.1.0] - 2026-11-05
