@@ -40,7 +40,20 @@ git checkout develop && git merge --no-ff master && git push
 
 Versões seguem [SemVer](https://semver.org/lang/pt-BR/): `MAJOR.MINOR.PATCH`.
 
+## Testes
+
+Testes de regressão em `tests/*.test.cjs` (`node:test`, sem dependências). Toda feature nova chega com testes (TDD).
+
+```bash
+git config core.hooksPath .githooks   # uma vez por clone: testes antes de merge em develop/master e de push
+sh tools/run-tests.sh                 # ou: node tools/test.cjs
+```
+
+Merges sempre com `--no-ff`. O CI roda os mesmos testes em todo PR para `develop` e `master`.
+
 ## Antes de abrir o PR
+
+- [ ] `sh tools/run-tests.sh` passa.
 
 - [ ] Testei no navegador do computador e no celular (ou em modo celular do DevTools).
 - [ ] Se mudei arquivos do app (criei, renomeei ou apaguei), atualizei a lista `FILES` do `sw.js` e aumentei a versão em `CACHE`.

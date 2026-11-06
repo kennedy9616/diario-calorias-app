@@ -4,6 +4,24 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 
 ## [Não lançado]
 
+## [1.2.0] - 2026-11-06
+
+### Adicionado
+- Testes de regressão automatizados (`tests/`, `node:test`), obrigatórios no CI e nos hooks de merge/push (`.githooks`).
+- Barra de navegação inferior com 4 abas: Água, Calorias, Analytics e Histórico. A aba aberta fica no endereço (`#agua`...).
+- Aba Histórico: taxa metabólica basal (Mifflin-St Jeor) com dados detalhados (data de nascimento, coeficiente da equação, condições especiais), registro de peso e medidas corporais, tendência de 7 dias, variação semanal com cobertura e gráfico de evolução.
+- A TMB é recalculada automaticamente pela média de peso dos últimos 7 dias quando há pesagens em 3 ou mais desses dias (pesagem isolada não muda o cálculo). Cada dia guarda TMB e peso de referência da época.
+- Aba Analytics: resumo do dia (consumo, diferença da meta, déficit estimado só em dia completo, proteína % da meta, carboidratos, gorduras, fibras, açúcares, colesterol e minerais), semana (calorias × meta do dia, regularidade, consumo médio dos dias completos, minutos equivalentes de atividade e dias de força) com visão em tabela.
+- Metas versionadas de calorias (estimativa com déficit 0/10/15%, profissional ou manual) e proteína (EFSA 0,83 g/kg ou ISSN 1,4–2,0 g/kg com treino regular), com método, fonte, vigência e dados usados. Cada dia é comparado com a meta vigente naquele dia.
+- Opção “Registrei tudo o que comi neste dia” (diário completo).
+- Aba Água: registro em ml (botões rápidos e volume livre), água pura e outras bebidas separadas, soma do dia, copo com o nível em relação à meta, últimos 7 dias e meta versionada (hábito ajustável ou limite de profissional; só água pura ou todas as bebidas), com a referência EFSA de água total. Volume muito alto gera aviso neutro; sem prêmio por excesso.
+
+### Alterado
+- Diário parcial não mostra “déficit”: o saldo só ganha cor e rótulo de déficit/superávit em dia marcado como completo.
+- A meta de calorias saiu de Meus dados; a meta antiga vira uma meta manual versionada, sem perda.
+- Alimentos registrados guardam os 12 nutrientes da quantidade (açúcares, gordura saturada, colesterol, cálcio, ferro, potássio).
+- Verificações do `tools/smoke.cjs` (incluindo as da localização 1.1.1) migradas para `tests/`.
+
 ## [1.1.1] - 2026-11-06
 
 ### Corrigido

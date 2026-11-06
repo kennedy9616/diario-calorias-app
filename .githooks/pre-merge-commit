@@ -1,0 +1,14 @@
+#!/bin/sh
+# Bloqueia o merge em develop ou master se os testes falharem.
+# Ativar uma vez por clone: git config core.hooksPath .githooks
+# Merges devem ser --no-ff (Git Flow): fast-forward não cria commit e não passa por aqui.
+branch=$(git rev-parse --abbrev-ref HEAD)
+case "$branch" in
+  develop|master) ;;
+  *) exit 0 ;;
+esac
+echo "Testes de regressão antes do merge em $branch…"
+sh "$(git rev-parse --show-toplevel)/tools/run-tests.sh" || {
+  echo "Merge bloqueado: testes falharam. Corrija na branch da feature." >&2
+  exit 1
+}

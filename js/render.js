@@ -24,7 +24,7 @@ function renderSummary() {
   const t = totals();
   $("sCons").textContent = fmt(t.cons);
   $("sGasto").textContent = fmt(t.gasto);
-  $("sTmb").textContent = fmt(tmb());
+  $("sTmb").textContent = fmt(dayTmb(cur));
   $("sEx").textContent = fmt(t.ex);
   $("sCarb").textContent = fmtTotal(t, "carb", "g");
   $("sProt").textContent = fmtTotal(t, "prot", "g");
@@ -40,12 +40,19 @@ function renderSummary() {
     $("balVal").textContent = "—";
   } else {
     const s = t.cons - t.gasto;
-    b.className = "balance " + (s <= 0 ? "def" : "sur");
-    $("balLbl").textContent = s <= 0 ? "Déficit calórico do dia" : "Superávit calórico do dia";
+    // diário parcial não vira "déficit": só o dia marcado como completo ganha cor e rótulo
+    const completo = !!(days[cur] && days[cur].completo && t.has);
+    b.className = "balance " + (!completo ? "none" : s <= 0 ? "def" : "sur");
+    $("balLbl").textContent = !completo ? "Saldo parcial: diário incompleto"
+      : s <= 0 ? "Déficit estimado do dia" : "Superávit estimado do dia";
     $("balVal").textContent = (s <= 0 ? "−" : "+") + fmt(Math.abs(s)) + " kcal";
   }
 
-  const meta = Number(profile.meta);
+  const mv = metaVigente("kcal", cur);
+  $("diaCompleto").checked = !!(days[cur] && days[cur].completo);
+  $("diaCompleto").disabled = !t.has;
+
+  const meta = mv ? mv.valor : 0;
   if (meta > 0) {
     $("metaBox").classList.remove("hide");
     const pct = Math.min(100, t.cons / meta * 100);
@@ -132,7 +139,8 @@ function renderEx() {
 function renderChart() {
   const keys = [];
   for (let i = 6; i >= 0; i--) keys.push(addDays(cur, -i));
-  const vals = keys.map(k => { const t = totals(k); return t.has ? t.cons - t.gasto : null; });
+  // só dias completos: diário parcial não gera saldo
+  const vals = keys.map(k => { const r = resumoDia(k); return r.completo ? -r.deficit : null; });
   const maxAbs = Math.max(300, ...vals.filter(v => v != null).map(v => Math.abs(v)));
 
   const W = 330, H = 170, top = 22, bot = 30;
@@ -147,7 +155,7 @@ function renderChart() {
   const cI = css.getPropertyValue("--ink").trim();
   const font = `font-family="Manrope, system-ui, sans-serif"`;
 
-  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Saldo calórico dos últimos 7 dias">`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Saldo estimado dos últimos 7 dias (só dias completos)">`;
   s += `<line x1="0" x2="${W}" y1="${mid}" y2="${mid}" stroke="${cL}" stroke-width="1"/>`;
   keys.forEach((k, i) => {
     const x = gap + i * (bw + gap), v = vals[i], d = fromKey(k);
@@ -169,16 +177,19 @@ function renderChart() {
 function renderProfile() {
   $("pPeso").value = profile.peso;
   $("pAlt").value = profile.altura;
-  $("pIdade").value = profile.idade;
+  $("pIdade").value = profile.nascimento ? idadeAtual() : profile.idade;
+  $("pIdade").disabled = !!profile.nascimento;
+  $("pNasc").value = profile.nascimento || "";
+  $("pNasc").max = TODAY;
+  CONDICOES.forEach(c => { $(c.id).checked = (profile.condicoes || []).includes(c.k); });
   $("pSexo").value = profile.sexo;
   $("pFator").value = String(profile.fator);
-  $("pMeta").value = profile.meta || "";
   renderProfileInfo();
 }
 
 function renderProfileInfo() {
-  $("profSum").textContent = `${fmt1(profile.peso)} kg · TMB ${fmt(tmb())}`;
-  $("tmbInfo").innerHTML = `Taxa metabólica basal: <b>${fmt(tmb())} kcal</b>. Com a rotina escolhida, gasto diário sem exercícios: <b>${fmt(tdee())} kcal</b>.`;
+  $("profSum").textContent = `${fmt1(pesoReferencia().peso)} kg · TMB ${fmt(tmb())}`;
+  $("tmbInfo").innerHTML = `Taxa metabólica basal: <b>${fmt(tmb())} kcal</b>. Com a rotina escolhida, gasto diário sem exercícios: <b>${fmt(tdee())} kcal</b>. Detalhes e peso de referência no cartão da TMB, acima.`;
 }
 
 function renderAll() {
@@ -187,6 +198,9 @@ function renderAll() {
   renderFoods();
   renderEx();
   renderChart();
+  renderHistorico();
+  renderAnalytics();
+  renderAgua();
   updateFoodPreview();
   updateExPreview();
 }

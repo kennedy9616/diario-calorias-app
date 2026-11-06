@@ -39,7 +39,7 @@ const FOODS = [
 const EXS = [
   { id: "caminhada", n: "Caminhada", m: [3.0, 4.3, 5.0], d: ["passo tranquilo, ~4 km/h", "passo firme, ~5,5 km/h", "passo acelerado, ~6,5 km/h"] },
   { id: "corrida", n: "Corrida / trote", m: [7.0, 9.0, 11.0], d: ["trote, ~7 km/h", "~9 km/h", "~11 km/h ou mais"] },
-  { id: "academia", n: "Academia (musculação)", m: [3.5, 5.0, 6.0], d: ["cargas leves, descanso longo", "treino normal", "pesado, pouco descanso"] },
+  { id: "academia", n: "Academia (musculação)", forca: true, m: [3.5, 5.0, 6.0], d: ["cargas leves, descanso longo", "treino normal", "pesado, pouco descanso"] },
   { id: "funcional", n: "Funcional / HIIT", m: [4.3, 6.0, 8.0], d: ["circuito leve", "circuito moderado", "HIIT, muito ofegante"] },
   { id: "bike", n: "Bicicleta", m: [4.0, 6.8, 8.0], d: ["passeio, <16 km/h", "16–19 km/h", "19–22 km/h"] },
   { id: "bikeind", n: "Bicicleta ergométrica / spinning", m: [3.5, 6.8, 8.8], d: ["carga leve", "carga moderada", "spinning intenso"] },
@@ -71,7 +71,7 @@ const NUTRIENTES = [
   { k: "potassio_mg", n: "Potássio", u: "mg" }
 ];
 // posição de cada nutriente no array (NUT.kcal = 0, NUT.carb = 1, ...)
-const NUT = { kcal: 0, carb: 1, prot: 2, gord: 3, fibra: 4, sodio: 5 };
+const NUT = { kcal: 0, carb: 1, prot: 2, gord: 3, fibra: 4, sodio: 5, acucar: 6, gsat: 7, colest: 8, calcio: 9, ferro: 10, potassio: 11 };
 
 // A busca aceita variantes em português e equivalentes em inglês das fontes.
 // Chaves sem acento. A alternativa precisa
@@ -109,3 +109,22 @@ const SINONIMOS = {
   suco: ["juice"], suina: ["pork"], tomate: ["tomato"], torrada: ["toast"], torta: ["pie"], trigo: ["wheat"],
   uva: ["grape"], vinagre: ["vinegar"], vinho: ["wine"]
 };
+
+// Medidas corporais do histórico (faixas aceitas, para barrar erro de digitação)
+const MEDIDAS_CAMPOS = [
+  { k: "peso_kg", n: "Peso", u: "kg", min: 20, max: 400, id: "mPeso" },
+  { k: "cintura_cm", n: "Cintura", u: "cm", min: 30, max: 300, id: "mCintura" },
+  { k: "quadril_cm", n: "Quadril", u: "cm", min: 30, max: 300, id: "mQuadril" },
+  { k: "braco_cm", n: "Braço", u: "cm", min: 10, max: 100, id: "mBraco" },
+  { k: "coxa_cm", n: "Coxa", u: "cm", min: 20, max: 150, id: "mCoxa" },
+  { k: "gordura_pct", n: "Gordura corporal", u: "%", min: 2, max: 75, id: "mGordura" }
+];
+
+// Condições em que o app não sugere metas automáticas (fluxo individualizado)
+const CONDICOES = [
+  { k: "gestante", id: "condGestante", n: "Gestante" },
+  { k: "lactante", id: "condLactante", n: "Amamentando" },
+  { k: "ta", id: "condTA", n: "Transtorno alimentar (atual ou passado)" },
+  { k: "renal", id: "condRenal", n: "Doença renal" },
+  { k: "liquidos", id: "condLiquidos", n: "Restrição de líquidos" }
+];

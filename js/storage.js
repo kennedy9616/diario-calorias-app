@@ -21,26 +21,49 @@ let fileState = "none";   // none | ok | permission | error
 
 /* ---------- Formato dos dados ---------- */
 // versao 2: alimentos cadastrados no schema da base (data/alimentos_unificados.json)
+// versao 3: histórico de peso e medidas (medidas)
+// versao 4: metas versionadas (metas); profile.meta migra para metas
 function snapshot() {
-  return { app: "diario-calorias", versao: 2, savedAt, profile, days };
+  return { app: "diario-calorias", versao: 4, savedAt, profile, days, medidas, metas };
 }
 // backup do app (profile/days) ou arquivo de "Exportar alimentos cadastrados" (alimentos)
 function validData(d) {
-  return !!d && typeof d === "object" && !Array.isArray(d) && !!(d.profile || d.days || Array.isArray(d.alimentos));
+  return !!d && typeof d === "object" && !Array.isArray(d) && !!(d.profile || d.days || Array.isArray(d.alimentos) || Array.isArray(d.medidas) || Array.isArray(d.metas));
 }
+// campos simples guardados em cada dia, além das listas
+const DAY_EXTRA = ["tdee", "tmb", "pesoRef", "pesoMetodo", "completo"];
 function cleanDays(src) {
   const out = {};
   Object.keys(src || {}).forEach(k => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
     const d = src[k] || {};
-    out[k] = { foods: Array.isArray(d.foods) ? d.foods : [], ex: Array.isArray(d.ex) ? d.ex : [], tdee: d.tdee };
+    out[k] = { foods: Array.isArray(d.foods) ? d.foods : [], ex: Array.isArray(d.ex) ? d.ex : [] };
+    DAY_EXTRA.forEach(x => { if (d[x] !== undefined) out[k][x] = d[x]; });
+    if (Array.isArray(d.agua)) out[k].agua = cleanAgua(d.agua);
   });
   return out;
+}
+// campos do perfil adicionados na versão 1.2 (perfis antigos ganham o padrão)
+function cleanProfileExtras() {
+  profile.condicoes = Array.isArray(profile.condicoes) ? profile.condicoes.filter(k => CONDICOES.some(c => c.k === k)) : [];
+  if (idadeEm(profile.nascimento, TODAY) == null) profile.nascimento = "";
+  if (profile.objetivo !== "perder") profile.objetivo = "manter";
+  const t = profile.treino && typeof profile.treino === "object" ? profile.treino : {};
+  profile.treino = {
+    tipo: ["nenhum", "aerobico", "forca", "misto"].includes(t.tipo) ? t.tipo : "nenhum",
+    dias: Number.isInteger(t.dias) && t.dias >= 0 && t.dias <= 7 ? t.dias : 0,
+    min: isNum(t.min) && t.min >= 0 && t.min <= 600 ? t.min : 0,
+    intensidade: ["leve", "moderada", "vigorosa"].includes(t.intensidade) ? t.intensidade : "moderada"
+  };
 }
 function replaceWith(d) {
   profile = Object.assign(clone(DEFAULT_PROFILE), d.profile || {});
   profile.customFoods = cleanCustomFoods(profile.customFoods);
+  cleanProfileExtras();
   days = cleanDays(d.days);
+  medidas = cleanMedidas(d.medidas);
+  metas = cleanMetas(d.metas);
+  migrarMetaAntiga();
   savedAt = d.savedAt || null;
 }
 // junta sem perder nada dos dois lados (usado ao abrir um arquivo)
@@ -50,17 +73,22 @@ function mergeIn(d) {
     profile = Object.assign(clone(DEFAULT_PROFILE), profile, d.profile);
     // os seus primeiro; do arquivo, só os que ainda não existem (pelo nome)
     profile.customFoods = cleanCustomFoods(keep.concat(Array.isArray(d.profile.customFoods) ? d.profile.customFoods : []));
+    cleanProfileExtras();
   }
   if (Array.isArray(d.alimentos)) profile.customFoods = cleanCustomFoods((profile.customFoods || []).concat(d.alimentos));
+  if (Array.isArray(d.medidas)) medidas = cleanMedidas(medidas.concat(d.medidas));
+  if (Array.isArray(d.metas)) metas = cleanMetas(metas.concat(d.metas));
   const inc = cleanDays(d.days);
   Object.keys(inc).forEach(k => {
-    const mine = days[k] || { foods: [], ex: [], tdee: inc[k].tdee };
+    const mine = days[k] || { foods: [], ex: [] };
     const ids = new Set(mine.foods.concat(mine.ex).map(x => x.id));
     inc[k].foods.forEach(f => { if (!ids.has(f.id)) mine.foods.push(f); });
     inc[k].ex.forEach(e => { if (!ids.has(e.id)) mine.ex.push(e); });
-    if (mine.tdee == null) mine.tdee = inc[k].tdee;
+    DAY_EXTRA.forEach(x => { if (mine[x] == null && inc[k][x] != null) mine[x] = inc[k][x]; });
+    if (inc[k].agua) mine.agua = cleanAgua((mine.agua || []).concat(inc[k].agua));
     days[k] = mine;
   });
+  migrarMetaAntiga();
 }
 
 /* ---------- Salvar ---------- */
@@ -98,7 +126,14 @@ async function writeFile() {
 function saveDay(k = cur) {
   const d = days[k];
   if (!d) return;
-  if (k === TODAY || d.tdee == null) d.tdee = Math.round(tdee());
+  if (k === TODAY || d.tdee == null) {
+    // guarda o cálculo da época: o dia passado não muda quando o perfil mudar
+    const ref = pesoReferencia(k);
+    d.tdee = Math.round(dayTdee(k));
+    d.tmb = Math.round(dayTmb(k));
+    d.pesoRef = r1(ref.peso);
+    d.pesoMetodo = ref.metodo;
+  }
   persist();
 }
 
