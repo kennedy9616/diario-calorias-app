@@ -29,7 +29,7 @@ git push -u origin feature/minha-melhoria
 ```bash
 git checkout develop && git pull
 git checkout -b release/1.2.0
-# atualize APP_VERSION (js/state.js), CACHE (sw.js) e o CHANGELOG.md
+# atualize APP_VERSION (js/state.js), data-versao e as ?v= do index.html, CACHE (sw.js) e o CHANGELOG.md
 git push -u origin release/1.2.0
 # PR release/1.2.0 → master; depois do merge:
 git checkout master && git pull
@@ -47,6 +47,12 @@ Testes de regressão em `tests/*.test.cjs` (`node:test`, sem dependências). Tod
 ```bash
 git config core.hooksPath .githooks   # uma vez por clone: testes antes de merge em develop/master e de push
 sh tools/run-tests.sh                 # ou: node tools/test.cjs
+```
+
+Teste de ponta a ponta no Chrome (opcional, fora do CI): sobe o app numa subpasta como no GitHub Pages e confere as 4 seções, os critérios de aceite, o teclado, o recarregamento, as larguras de 360 a 1280 px e o console.
+
+```bash
+node tools/e2e/e2e.cjs               # Chrome em outro lugar: CHROME=/caminho/do/chrome
 ```
 
 Merges sempre com `--no-ff`. O CI roda os mesmos testes em todo PR para `develop` e `master`.

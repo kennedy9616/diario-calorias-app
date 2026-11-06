@@ -1,6 +1,6 @@
 # Diário de Calorias
 
-Aplicativo simples para registrar o que você come e os exercícios que faz, e ver o **saldo calórico do dia** (déficit ou superávit). Funciona no celular e no computador, abre pelo navegador, pode ser instalado na tela inicial e funciona sem internet.
+Aplicativo para registrar o que você come, a água que bebe, os exercícios e o peso, e acompanhar metas e evolução. Tem quatro seções: **Água**, **Calorias**, **Analytics** e **Perfil**. Funciona no celular e no computador, abre pelo navegador, pode ser instalado na tela inicial e funciona sem internet.
 
 **👉 Usar agora:** https://kennedy9616.github.io/diario-calorias-app/
 
@@ -10,15 +10,31 @@ Aplicativo simples para registrar o que você come e os exercícios que faz, e v
 
 ## O que ele faz
 
+**Água**
+- Copo configurável (150 a 500 ml ou volume próprio): cada toque registra o volume, com desfazer, edição e exclusão.
+- Silhueta que enche conforme o progresso da meta do dia (não mede hidratação); o total real continua somando acima da meta.
+- Meta estimada pela referência da EFSA ou meta personalizada, com histórico.
+
+**Calorias**
 - Busca em mais de **13 mil alimentos** (Tabela TACO e USDA), com nomes em português, calorias e 11 nutrientes por 100 g.
 - Porções caseiras ("1 cup", "1 slice"…) nos alimentos que têm essa informação, e informação nutricional completa da quantidade escolhida.
 - Cadastro de alimentos que não estão na lista: você informa os valores do rótulo e eles ficam salvos, no mesmo formato da base de alimentos.
 - Registro de exercícios (caminhada, academia, corrida, bicicleta, natação…) com intensidade e tempo.
 - Cálculo do gasto diário: taxa metabólica basal (TMB) + rotina + exercícios.
 - Resumo do dia com carboidratos, proteínas, gorduras, fibras e sódio.
-- Meta diária de consumo com barra de progresso.
-- Gráfico do saldo dos últimos 7 dias.
-- Tema claro e escuro automático, conforme o aparelho.
+- Meta diária de consumo com barra de progresso; edição de alimentos e exercícios.
+- Gráfico do saldo estimado dos últimos 7 dias (só dias marcados como completos).
+
+**Analytics**
+- Filtros de período (hoje, 7, 30, 90 dias ou personalizado) e comparação com o período anterior.
+- Água, calorias e peso por dia, distribuição dos macronutrientes e indicadores com a cobertura dos registros. Dia sem registro não conta como zero.
+
+**Perfil**
+- Nome, idade, altura, sexo das equações, objetivo (perder, manter ou ganhar peso), rotina e copo padrão.
+- Histórico de peso e medidas com edição; peso atual = pesagem mais recente.
+- Taxa metabólica basal e metas de calorias, proteína e água, cada uma com vigência.
+
+Tema escuro com detalhes em verde (claro automático, conforme o aparelho). Navegação inferior no celular e lateral no computador.
 
 ## Instalar no celular
 
@@ -82,13 +98,20 @@ e abra http://localhost:8000. No VS Code, a extensão **Live Server** também fu
 │   └── style.css              estilos, tema claro e escuro
 ├── js/
 │   ├── data.js                lista curta de alimentos, exercícios (METs), nutrientes e traduções para a busca
-│   ├── utils.js               formatação, datas e avisos
-│   ├── state.js               estado do app e cálculos (TMB, gasto, totais)
+│   ├── utils.js               formatação, datas, números com vírgula e avisos
+│   ├── ui.js                  ícones, erros de campo e janela de edição
+│   ├── state.js               estado do app e cálculos (TMB, gasto, totais, virada do dia)
 │   ├── foods.js               base de alimentos: carregamento, busca e alimentos cadastrados
 │   ├── storage.js             salvar e carregar: navegador, arquivo e cópia de segurança
-│   ├── render.js              desenha o resumo, as listas e o gráfico
-│   ├── forms.js               formulários de alimentos, exercícios e dados pessoais
+│   ├── render.js              desenha o resumo, as listas e o gráfico de saldo
+│   ├── forms.js               formulários de alimentos, exercícios e Perfil; edição de registros
+│   ├── body.js                peso atual, medidas, tendência e TMB
+│   ├── metas.js               metas versionadas (calorias e proteína) e histórico
+│   ├── charts.js              gráficos SVG com valores por toque e teclado
+│   ├── analytics.js           períodos, agregações e tela de Analytics
+│   ├── water.js               água: copo, registros, desfazer, silhueta e meta
 │   ├── install.js             instalação na tela inicial e service worker
+│   ├── nav.js                 navegação entre as 4 seções (#agua, #calorias…)
 │   └── app.js                 inicialização
 ├── data/
 │   ├── alimentos_unificados.json   base de referência: TACO + USDA (13.822 itens, 15 MB)
@@ -108,6 +131,8 @@ As ferramentas em `tools/` usam Perl, que já vem com o Git no Windows e já exi
 
 **Ao adicionar ou renomear um arquivo**, inclua-o na lista `FILES` do `sw.js` e aumente a versão em `CACHE`, para que os celulares baixem a versão nova.
 
+**A cada versão**, troque a versão em `APP_VERSION` (`js/state.js`), em `data-versao` e em todas as `?v=` do `index.html`. Os testes conferem que são iguais. A versão no endereço impede que o navegador misture arquivos de publicações diferentes (o GitHub Pages manda guardar cada arquivo por 10 minutos).
+
 ## Contribuir
 
 O projeto usa **Git Flow**: `master` é a produção, publicada no GitHub Pages, e `develop` é a integração. As funcionalidades entram por pull request a partir de branches `feature/*`. Veja o passo a passo em [CONTRIBUTING.md](CONTRIBUTING.md) e as mudanças de cada versão em [CHANGELOG.md](CHANGELOG.md).
@@ -117,5 +142,7 @@ O projeto usa **Git Flow**: `master` é a produção, publicada no GitHub Pages,
 - Taxa metabólica basal pela equação de **Mifflin-St Jeor**.
 - Alimentos: **Tabela TACO**, 4ª edição (NEPA/Unicamp, 2011), normalizada por Fabio F. Brolesi ([brolesi/taco](https://github.com/brolesi/taco), MIT); **USDA FoodData Central**, SR Legacy (2018) e FNDDS 2021–2023 (domínio público, CC0); e rótulos médios na lista curta do app. Valores por 100 g, aproximados. Valor ausente na fonte aparece como "—" (sem dado), e não como zero.
 - Gasto dos exercícios pelo **Compendium of Physical Activities** (METs), contando só o gasto *extra* além do basal.
+- Meta de água estimada pela **EFSA** (2010, *Dietary Reference Values for water*): 2,0 L/dia de água total para mulheres e 2,5 L/dia para homens adultos, menos 20% que vêm dos alimentos.
+- Energia dos macronutrientes pelos fatores gerais de **Atwater** (4, 4 e 9 kcal/g).
 
 Os valores são estimativas para acompanhamento pessoal. Metas e ajustes de dieta devem vir do seu médico ou nutricionista.

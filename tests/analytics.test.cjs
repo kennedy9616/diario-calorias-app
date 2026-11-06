@@ -209,28 +209,170 @@ test("marcar o dia como completo grava no dia e o resumo do Calorias não comemo
   assert.ok(a.el("balance").classList.contains("def"));
 });
 
-test("abas: Analytics tem resumo, semana, tabela e metas; Calorias tem o 'dia completo'", () => {
+test("seções: Calorias tem o resumo detalhado do dia e o 'dia completo'; Perfil tem as metas; Analytics tem filtros, indicadores e gráficos", () => {
   const pick = v => { const s = html.indexOf(`<main id="view-${v}"`); return html.slice(s, html.indexOf("</main>", s)); };
-  const an = pick("analytics");
-  for (const id of ["anCons", "anDif", "anDef", "anProt", "anProtFill", "anNutri", "anVit", "anChart", "anTabela",
-    "anReg", "anMedia", "anAtiv", "anForca", "chart", "mtObjetivo", "mtTreinoTipo", "mtTreinoDias", "mtTreinoMin",
-    "mtTreinoInt", "mtKOrigem", "mtKDef", "mtKValor", "mtKSalvar", "mtKAtual", "mtKErro", "mtPCrit", "mtPValor",
-    "mtPSalvar", "mtPAtual", "mtPErro"]) {
-    assert.ok(an.includes(`id="${id}"`), `ausente no Analytics: ${id}`);
+  const cal = pick("calorias"), perfil = pick("perfil"), an = pick("analytics");
+  for (const id of ["anCons", "anDif", "anDef", "anProt", "anProtFill", "anNutri", "anVit", "diaCompleto", "chart"]) assert.ok(cal.includes(`id="${id}"`), `Calorias: ${id}`);
+  for (const id of ["mtTreinoTipo", "mtTreinoDias", "mtTreinoMin", "mtTreinoInt", "mtKOrigem", "mtKDef", "mtKValor", "mtKSalvar", "mtKAtual",
+    "mtKErro", "mtPCrit", "mtPValor", "mtPSalvar", "mtPAtual", "mtPErro", "metasHist"]) assert.ok(perfil.includes(`id="${id}"`), `Perfil: ${id}`);
+  for (const id of ["anPeriodo", "anIni", "anFim", "anAplicar", "anPerTxt", "anVazio", "anKpis", "anAguaChart", "anKcalChart", "anPesoChart", "anMacros", "anEvolucao", "anAguaTab", "anKcalTab"]) {
+    assert.ok(an.includes(`id="${id}"`), `Analytics: ${id}`);
   }
-  assert.ok(pick("calorias").includes('id="diaCompleto"'));
-  assert.ok(!html.includes('id="pMeta"'), "meta saiu de Meus dados (agora versionada em Analytics)");
+  assert.deepEqual([...an.matchAll(/data-p="([a-z0-9]+)"/g)].map(m => m[1]), ["hoje", "7d", "30d", "90d", "custom"]);
+  assert.ok(!html.includes('id="pMeta"'), "meta saiu de Meus dados (agora versionada)");
 });
 
-test("renderAnalytics desenha sem erro; barra de proteína não passa de 100%", () => {
+test("renderAnDia (Calorias) desenha sem erro; barra de proteína não passa de 100%", () => {
   const a = app();
-  a.run("renderAnalytics()");
+  a.run("renderAnDia()");
   assert.match(a.el("anCons").textContent, /—/);
   a.run('definirMeta(estimarMetaProteina("efsa").meta)');
   a.dia(0, { completo: true, foods: [{ id: "a", kcal: 2500, prot: 120 }] });
-  a.run("renderAnalytics()");
-  assert.match(a.el("anChart").innerHTML, /<svg/);
+  a.run("renderAnDia()");
   assert.equal(a.el("anProtFill").style.width, "100%");
   assert.doesNotMatch(a.el("anProtSub").textContent + a.el("anDefSub").textContent, /parab|excelente|incr[ií]vel/i);
-  assert.match(a.el("anTabela").innerHTML, /<tr/);
+});
+
+/* ---------- Períodos ---------- */
+test("períodos: datas inicial e final incluídas; 7 dias termina hoje; anterior tem a mesma duração", () => {
+  const a = app();
+  const p7 = a.run('periodoDe("7d")');
+  assert.equal(p7.fim, a.run("TODAY"));
+  assert.equal(p7.ini, a.d(6));
+  assert.equal(p7.n, 7);
+  assert.equal(a.run('diasDo(periodoDe("7d")).length'), 7);
+  assert.equal(a.run('periodoDe("hoje").n'), 1);
+  assert.equal(a.run('periodoDe("30d").ini'), a.d(29));
+  assert.equal(a.run('periodoDe("90d").n'), 90);
+  const ant = a.run('periodoAnterior(periodoDe("7d"))');
+  assert.equal(ant.fim, a.d(7));
+  assert.equal(ant.ini, a.d(13));
+  const c = a.run(`periodoDe("custom", "${a.d(4)}", "${a.d(2)}")`);
+  assert.deepEqual([c.ini, c.fim, c.n], [a.d(4), a.d(2), 3]);
+});
+
+test("período personalizado inválido é recusado com mensagem; o filtro cai em 7 dias", () => {
+  const a = app();
+  assert.match(a.run(`validarPeriodo("${a.d(1)}", "${a.d(3)}").erro`), /anterior/);
+  assert.match(a.run(`validarPeriodo("${a.d(0)}", addDays(TODAY, 1)).erro`), /depois de hoje/);
+  assert.match(a.run('validarPeriodo("", "").erro'), /Escolha/);
+  assert.match(a.run(`validarPeriodo("${a.d(400)}", "${a.d(0)}").erro`), /366/);
+  assert.equal(a.run('periodoDe("custom", "2026-02-30", "x").tipo'), "7d");
+});
+
+test("agregação: médias só dos dias com registro, cobertura explícita e meta vigente em cada dia", () => {
+  const a = app();
+  a.run('definirMeta(metaKcalInformada(2000, "profissional").meta, addDays(TODAY, -10))');
+  a.run('definirMeta(metaAguaInformada(2000, { origem: "manual" }).meta, addDays(TODAY, -10))');
+  a.dia(0, { completo: true, foods: [{ id: "a", kcal: 1800, carb: 200, prot: 100, gord: 60 }] });
+  a.dia(2, { foods: [{ id: "b", kcal: 2400, carb: 300, prot: 80, gord: 90 }] });
+  a.dia(1, { agua: [{ id: "w1", ml: 2000, tipo: "agua", t: 1 }] });
+  a.dia(3, { agua: [{ id: "w2", ml: 1000, tipo: "agua", t: 1 }] });
+  const r = a.run('agregarPeriodo(periodoDe("7d"))');
+  assert.equal(r.n, 7);
+  assert.equal(r.diasComRegistro, 4);
+  assert.equal(r.kcal.diasRegistro, 2);
+  assert.equal(r.kcal.media, 2100, "média de 2 dias, não de 7");
+  assert.equal(r.kcal.diasCompletos, 1);
+  assert.equal(r.kcal.mediaDiferenca, 100);
+  assert.equal(r.kcal.diasAcima, 1);
+  assert.equal(r.agua.diasRegistro, 2);
+  assert.equal(r.agua.media, 1500);
+  assert.equal(r.agua.diasComMeta, 2);
+  assert.equal(r.agua.diasMetaAtingida, 1);
+  assert.equal(r.agua.serie.filter(d => d.v == null).length, 5, "dias sem registro ficam null (não zero)");
+  assert.equal(r.kcal.serie.find(d => d.k === a.d(2)).fraco, true, "dia parcial marcado");
+});
+
+test("filtros mudam os números: 'hoje' só vê hoje; 30 dias inclui registros antigos", () => {
+  const a = app();
+  a.dia(0, { foods: [{ id: "a", kcal: 1000 }] });
+  a.dia(20, { foods: [{ id: "b", kcal: 3000 }] });
+  assert.equal(a.run('agregarPeriodo(periodoDe("hoje")).kcal.media'), 1000);
+  assert.equal(a.run('agregarPeriodo(periodoDe("7d")).kcal.media'), 1000);
+  assert.equal(a.run('agregarPeriodo(periodoDe("30d")).kcal.media'), 2000);
+  assert.equal(a.run('agregarPeriodo(periodoDe("30d")).kcal.diasRegistro'), 2);
+});
+
+test("sem dados: nenhuma média ou comparação inventada, sem divisão por zero", () => {
+  const a = app();
+  const r = a.run('agregarPeriodo(periodoDe("30d"))');
+  assert.equal(r.diasComRegistro, 0);
+  assert.equal(r.agua.media, null);
+  assert.equal(r.kcal.media, null);
+  assert.equal(r.kcal.mediaDiferenca, null);
+  assert.equal(r.peso.variacao, null);
+  assert.equal(r.macros, null);
+  assert.deepEqual({ ...a.run("comparar(null, 1000)") }, { delta: null, pct: null, motivo: "sem dados neste período" });
+  assert.deepEqual({ ...a.run("comparar(1000, null)") }, { delta: null, pct: null, motivo: "sem dados no período anterior" });
+  assert.deepEqual({ ...a.run("comparar(5, 0)") }, { delta: 5, pct: null, motivo: "sem base para percentual" });
+  assert.equal(a.run("comparar(1200, 1000).pct"), 20);
+  a.run("renderAnalytics()");
+  assert.ok(!a.el("anVazio").classList.contains("hide"), "estado vazio com orientação");
+  assert.ok(a.el("anConteudo").classList.contains("hide"));
+});
+
+test("peso no período: só medições reais; variação = última − primeira; sem julgamento de melhora", () => {
+  const a = app();
+  a.run(`addMedida({ data: addDays(TODAY, -6), peso_kg: 80 }); addMedida({ data: addDays(TODAY, -1), peso_kg: 79.2 });`);
+  const r = a.run('agregarPeriodo(periodoDe("7d"))');
+  assert.equal(r.peso.pontos.length, 2);
+  assert.equal(Math.round(r.peso.variacao * 10) / 10, -0.8);
+  a.run('profile.objetivo = "ganhar"');
+  const itens = a.run('evolucaoItens(agregarPeriodo(periodoDe("7d")))').join(" ");
+  assert.match(itens, /contrário ao objetivo declarado \(ganhar peso\)/);
+  assert.doesNotMatch(itens, /melhor|piorou|parab|sucesso/i);
+  assert.equal(a.run('agregarPeriodo(periodoDe("hoje")).peso.variacao'), null, "sem pesagem hoje");
+});
+
+test("editar um alimento ou um registro de água muda os números do Analytics", () => {
+  const a = app();
+  a.dia(0, { foods: [{ id: "f", name: "Arroz", g: 100, unit: "g", kcal: 128, carb: 28.1, prot: 2.5, gord: 0.2, meal: "Almoço" }] });
+  a.run('addAgua(500, "agua")');
+  assert.equal(a.run('agregarPeriodo(periodoDe("hoje")).kcal.media'), 128);
+  assert.equal(a.run('updateFood("f", { qtd: 200, meal: "Jantar" }).ok'), true);
+  assert.equal(a.run('agregarPeriodo(periodoDe("hoje")).kcal.media'), 256);
+  assert.equal(a.run('days[TODAY].foods[0].carb'), 56.2);
+  assert.equal(a.run('days[TODAY].foods[0].meal'), "Jantar");
+  const id = a.run("days[TODAY].agua[0].id");
+  a.run(`updateAgua("${id}", { ml: 750, hora: "08:00", tipo: "agua" })`);
+  assert.equal(a.run('agregarPeriodo(periodoDe("hoje")).agua.media'), 750);
+});
+
+test("editar exercício recalcula o gasto com o peso do dia; valores inválidos são recusados", () => {
+  const a = app();
+  a.dia(0, { ex: [{ id: "e", tipo: "caminhada", name: "Caminhada", int: 1, min: 30, met: 4.3, kcal: 116 }] });
+  assert.equal(a.run('updateExercicio("e", { min: 60, int: 2 }).ok'), true);
+  assert.equal(a.run("days[TODAY].ex[0].kcal"), Math.round((5.0 - 1) * 70 * 60 / 60));
+  assert.equal(a.run('updateExercicio("e", { min: 0, int: 1 }).ok'), false);
+  assert.equal(a.run('updateExercicio("e", { min: 700, int: 1 }).ok'), false);
+  assert.equal(a.run('totals(TODAY).ex'), 280, "o gasto do exercício entra uma vez só");
+});
+
+test("macronutrientes: % da energia por Atwater (4/4/9); sem dados = null", () => {
+  const { run } = app();
+  const d = run("distribuicaoMacros({ carb: 100, prot: 50, gord: 20 })");
+  assert.equal(Math.round(d.carb.pct), 51);   // 400 de 780 kcal
+  assert.equal(Math.round(d.prot.pct), 26);
+  assert.equal(Math.round(d.gord.pct), 23);
+  assert.equal(run("distribuicaoMacros({ carb: 0, prot: 0, gord: 0 })"), null);
+});
+
+test("renderAnalytics com dados: indicadores com cobertura, gráficos SVG e tabelas, sem NaN", () => {
+  const a = app();
+  a.run('definirMeta(metaKcalInformada(2000, "profissional").meta, addDays(TODAY, -10))');
+  a.dia(0, { completo: true, foods: [{ id: "a", kcal: 1800, carb: 200, prot: 100, gord: 60 }] });
+  a.dia(1, { agua: [{ id: "w", ml: 1500, tipo: "agua", t: 1 }] });
+  a.run("addMedida({ data: TODAY, peso_kg: 70 })");
+  a.run("renderAnalytics()");
+  assert.ok(a.el("anVazio").classList.contains("hide"));
+  const kpis = a.el("anKpis").innerHTML;
+  assert.match(kpis, /1 de 7 dias com registro/);
+  assert.match(kpis, /2 de 7/);
+  assert.doesNotMatch(kpis, /NaN|Infinity|undefined/);
+  for (const id of ["anAguaChart", "anKcalChart", "anPesoChart"]) assert.match(a.el(id).innerHTML, /<svg/, id);
+  assert.match(a.el("anMacros").innerHTML, /segbar/);
+  assert.match(a.el("anKcalTab").innerHTML, /sem registro/);
+  assert.match(a.el("anPerTxt").textContent, /incluídas/);
+  assert.deepEqual(a.erros, []);
 });

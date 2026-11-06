@@ -7,7 +7,8 @@ const vm = require("node:vm");
 const root = path.join(__dirname, "..");
 const read = file => fs.readFileSync(path.join(root, file), "utf8");
 const html = read("index.html");
-const scripts = [...html.matchAll(/<script defer src="([^"]+)"/g)].map(m => m[1]);
+// endereço sem a ?v= de versão (o arquivo no disco)
+const scripts = [...html.matchAll(/<script defer src="([^"?]+)(?:\?v=[^"]*)?"/g)].map(m => m[1]);
 
 class FakeClassList {
   constructor() { this.s = new Set(); }
@@ -67,7 +68,10 @@ class FakeEl {
 
 // Um app novo a cada chamada: estado limpo, sem vazar entre testes.
 function loadApp({ base = false, storage = new Map(), hash = "" } = {}) {
+  const ctl = { quebrado: false };   // app.quebrar(true): localStorage.setItem passa a falhar (cota cheia)
   const els = new Map();
+  const winListeners = {};
+  const erros = [];
   const document = {
     documentElement: new FakeEl("html"),
     body: new FakeEl("body"),
@@ -79,22 +83,27 @@ function loadApp({ base = false, storage = new Map(), hash = "" } = {}) {
     createElement: tag => new FakeEl(tag),
     querySelector: () => new FakeEl(),
     querySelectorAll: () => [],
-    addEventListener() {}
+    addEventListener() {},
+    contains: () => true,
+    scripts: []
   };
   const location = { hash, href: "http://localhost/" + hash, origin: "http://localhost" };
   const context = vm.createContext({
-    console, setTimeout, clearTimeout, Intl, URL,
+    console: Object.assign(Object.create(console), { error: (...a) => { erros.push(a.map(String).join(" ")); }, warn() {} }),
+    setTimeout, clearTimeout, setInterval() {}, Intl, URL,
     document, location,
     history: { replaceState(_s, _t, url) { location.hash = String(url).replace(/^[^#]*/, ""); } },
     navigator: { userAgent: "test", platform: "", maxTouchPoints: 0 },
-    addEventListener() {},
+    addEventListener(type, fn) { (winListeners[type] = winListeners[type] || []).push(fn); },
+    __hashchange() { (winListeners.hashchange || []).forEach(fn => fn({})); },
+    __hashListeners() { return (winListeners.hashchange || []).length; },
     scrollTo() {},
     getComputedStyle: () => ({ getPropertyValue: () => "#000" }),
     matchMedia: () => ({ matches: false }),
     showSaveFilePicker() {},
     localStorage: {
       getItem: key => (storage.has(key) ? storage.get(key) : null),
-      setItem: (key, value) => storage.set(key, String(value)),
+      setItem: (key, value) => { if (ctl.quebrado) { const e = new Error("cota"); e.name = "QuotaExceededError"; throw e; } storage.set(key, String(value)); },
       removeItem: key => storage.delete(key)
     }
   });
@@ -108,7 +117,7 @@ function loadApp({ base = false, storage = new Map(), hash = "" } = {}) {
     vm.runInContext(read("data/alimentos-base.js"), context, { filename: "data/alimentos-base.js" });
     run('applyBase(ALIMENTOS_BASE); baseState = "ok";');
   }
-  return { context, run, el: id => document.getElementById(id), storage, document, location };
+  return { context, run, el: id => document.getElementById(id), storage, document, location, erros, quebrar: on => { ctl.quebrado = !!on; } };
 }
 
 module.exports = { root, read, html, scripts, loadApp, FakeEl };

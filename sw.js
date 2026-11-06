@@ -1,11 +1,14 @@
 // Service worker: guarda o app no aparelho para abrir sem internet.
-// Arquivos do app: busca primeiro a versão nova na rede; sem rede, usa a cópia guardada.
+// Página (index.html): sempre revalida na rede (cache: "no-cache"), para nunca abrir
+//   uma página velha com scripts novos (ou o contrário) depois de uma publicação.
+// Demais arquivos do app: vêm com ?v=<versão> no endereço, então cada publicação usa
+//   endereços novos; busca na rede e, sem rede, usa a cópia guardada.
 // Fonte (Google Fonts): usa a cópia guardada; só baixa da rede na primeira vez.
 //
 // Ao adicionar ou renomear arquivos do app, atualize a lista FILES e
 // aumente o número da versão em CACHE.
 
-const CACHE = "diario-calorias-v9";
+const CACHE = "diario-calorias-v11";
 const FONT_CACHE = "diario-calorias-fontes-v1";
 const FILES = [
   "./",
@@ -14,6 +17,7 @@ const FILES = [
   "./css/style.css",
   "./js/data.js",
   "./js/utils.js",
+  "./js/ui.js",
   "./js/state.js",
   "./js/foods.js",
   "./js/storage.js",
@@ -21,6 +25,7 @@ const FILES = [
   "./js/forms.js",
   "./js/body.js",
   "./js/metas.js",
+  "./js/charts.js",
   "./js/analytics.js",
   "./js/water.js",
   "./js/install.js",
@@ -34,8 +39,9 @@ const FILES = [
 ];
 const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
+// cache: "reload" ignora o cache HTTP do navegador: a cópia offline é sempre a publicada agora
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(u => new Request(u, { cache: "reload" })))));
   self.skipWaiting();
 });
 
@@ -67,18 +73,21 @@ self.addEventListener("fetch", e => {
 
   if (url.origin !== location.origin) return;
 
-  // arquivos do app: rede primeiro, cópia guardada se estiver sem internet
+  // a página revalida sempre; os arquivos versionados (?v=) podem usar o cache HTTP
+  const fresh = req.mode === "navigate" ? new Request(req, { cache: "no-cache" }) : req;
+  // guarda sem a ?v=, uma cópia por arquivo (a versão nova substitui a antiga)
+  const chave = url.origin + url.pathname;
   e.respondWith(
-    fetch(req)
+    fetch(fresh)
       .then(res => {
-        if (res.ok) {
+        if (res.ok && res.type === "basic") {
           const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy));
+          caches.open(CACHE).then(c => c.put(chave, copy));
         }
         return res;
       })
       .catch(() =>
-        caches.match(req, { ignoreSearch: true })
+        caches.match(chave, { ignoreSearch: true })
           .then(r => r || (req.mode === "navigate" ? caches.match("./index.html") : Response.error()))
       )
   );
