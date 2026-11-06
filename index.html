@@ -32,6 +32,7 @@
   <script defer src="js/render.js"></script>
   <script defer src="js/forms.js"></script>
   <script defer src="js/install.js"></script>
+  <script defer src="js/nav.js"></script>
   <script defer src="js/app.js"></script>
 </head>
 <body>
@@ -59,12 +60,22 @@
     <button type="button" class="x" id="installClose" aria-label="Fechar">×</button>
   </div>
 
-  <div class="datenav">
+  <div class="datenav" id="datenav">
     <button type="button" id="prev" aria-label="Dia anterior">‹</button>
     <div class="d" id="dateLbl"></div>
     <button type="button" id="next" aria-label="Próximo dia">›</button>
   </div>
 
+  <!-- ===== Aba Água ===== -->
+  <main id="view-agua" class="view hide">
+  <section class="card">
+    <h2>Água</h2>
+    <p class="hint">Registro de água em breve.</p>
+  </section>
+  </main>
+
+  <!-- ===== Aba Calorias ===== -->
+  <main id="view-calorias" class="view">
   <!-- Resumo do dia -->
   <section class="card">
     <div class="balance none" id="balance">
@@ -153,6 +164,10 @@
     </div>
   </section>
 
+  </main>
+
+  <!-- ===== Aba Analytics ===== -->
+  <main id="view-analytics" class="view hide">
   <!-- Últimos 7 dias -->
   <section class="card chart">
     <h2>Últimos 7 dias <span>saldo do dia</span></h2>
@@ -160,6 +175,10 @@
     <div class="legend"><span><i class="def"></i>Déficit</span><span><i class="sur"></i>Superávit</span></div>
   </section>
 
+  </main>
+
+  <!-- ===== Aba Histórico ===== -->
+  <main id="view-historico" class="view hide">
   <!-- Dados pessoais -->
   <section class="card">
     <details id="profBox">
@@ -189,10 +208,35 @@
     </details>
   </section>
 
+  </main>
+
   <footer>
     TMB pela equação de Mifflin-St Jeor. Alimentos: Tabela TACO, 4ª edição (NEPA/Unicamp), USDA FoodData Central (domínio público) e rótulos médios; valores por 100 g, aproximados. Gasto dos exercícios pelo Compendium of Physical Activities (METs), contando só o gasto <i>extra</i> além do basal, para não somar o basal duas vezes. É uma estimativa para acompanhamento — metas e ajustes vêm da sua equipe de saúde. <span id="appVer"></span>
   </footer>
 </div>
+
+<!-- Navegação inferior -->
+<nav class="bnav" id="bnav" aria-label="Seções do app">
+  <div class="in">
+    <button type="button" id="nav-agua" data-view="agua">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2C9 7.3 6 10.6 6 14a6 6 0 0 0 12 0c0-3.4-3-6.7-6-10.8z"/></svg>
+      <span>Água</span>
+    </button>
+    <button type="button" id="nav-calorias" data-view="calorias">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8c.6 3.2-2.4 4.9-2.4 7.6a2.4 2.4 0 0 0 4.8 0c0-.8-.2-1.5-.6-2.1 2.4 1.5 4.2 4.1 4.2 6.6a6 6 0 0 1-12 0c0-4.6 4.2-7.3 6-12.1z"/></svg>
+      <span>Calorias</span>
+    </button>
+    <button type="button" id="nav-analytics" data-view="analytics">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-7M12 20V5M19 20v-10M3 20.5h18"/></svg>
+      <span>Analytics</span>
+    </button>
+    <button type="button" id="nav-historico" data-view="historico">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5M12 7.5V12l3 2"/></svg>
+      <span>Histórico</span>
+    </button>
+  </div>
+</nav>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
