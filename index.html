@@ -31,6 +31,7 @@
   <script defer src="js/storage.js"></script>
   <script defer src="js/render.js"></script>
   <script defer src="js/forms.js"></script>
+  <script defer src="js/body.js"></script>
   <script defer src="js/install.js"></script>
   <script defer src="js/nav.js"></script>
   <script defer src="js/app.js"></script>
@@ -179,18 +180,60 @@
 
   <!-- ===== Aba Histórico ===== -->
   <main id="view-historico" class="view hide">
+  <!-- Taxa metabólica basal -->
+  <section class="card" id="tmbCard">
+    <h2>Taxa metabólica basal <span>em repouso</span></h2>
+    <div class="hero num" id="tmbVal">—</div>
+    <ul class="facts" id="tmbDet"></ul>
+    <p class="note hide" id="tmbAviso" role="note"></p>
+    <p class="hint">Estimativa ajustável, não prescrição: metas e ajustes vêm da sua equipe de saúde. <a href="https://pubmed.ncbi.nlm.nih.gov/2305711/" target="_blank" rel="noopener">Equação de Mifflin-St Jeor</a>.</p>
+  </section>
+
+  <!-- Registro de peso e medidas -->
+  <section class="card">
+    <h2>Registrar peso e medidas</h2>
+    <div class="row">
+      <div><label for="mData">Data</label><input id="mData" type="date"></div>
+      <div><label for="mPeso">Peso (kg)</label><input id="mPeso" type="number" inputmode="decimal" step="0.1" min="20" max="400"></div>
+    </div>
+    <div class="row">
+      <div><label for="mCintura">Cintura (cm)</label><input id="mCintura" type="number" inputmode="decimal" step="0.1" min="30" max="300"></div>
+      <div><label for="mQuadril">Quadril (cm)</label><input id="mQuadril" type="number" inputmode="decimal" step="0.1" min="30" max="300"></div>
+    </div>
+    <div class="row">
+      <div><label for="mBraco">Braço (cm)</label><input id="mBraco" type="number" inputmode="decimal" step="0.1" min="10" max="100"></div>
+      <div><label for="mCoxa">Coxa (cm)</label><input id="mCoxa" type="number" inputmode="decimal" step="0.1" min="20" max="150"></div>
+      <div><label for="mGordura">Gordura (%)</label><input id="mGordura" type="number" inputmode="decimal" step="0.1" min="2" max="75"></div>
+    </div>
+    <p class="hint">Registre o que tiver: todos os campos são opcionais. Pese-se em condições parecidas (ex.: ao acordar). Várias pesagens no mesmo dia contam como a média do dia.</p>
+    <div class="preview err" id="medidaErro" role="alert"></div>
+    <button type="button" class="btn" id="addMedida">Registrar</button>
+  </section>
+
+  <!-- Evolução -->
+  <section class="card chart">
+    <h2>Evolução do peso <span>últimos 30 dias</span></h2>
+    <div class="grid">
+      <div class="stat"><div class="k">Tendência (média 7 dias)</div><div class="v num" id="pesoTend">—</div><div class="sub" id="pesoTendSub"></div></div>
+      <div class="stat"><div class="k">Variação semanal</div><div class="v num" id="pesoVar">—</div><div class="sub" id="pesoVarSub"></div></div>
+    </div>
+    <div id="pesoChart" class="chartbox"></div>
+    <div class="legend"><span><i class="pt"></i>Pesagem do dia</span><span><i class="ln"></i>Média de 7 dias</span></div>
+    <div class="list" id="medidaList"></div>
+  </section>
+
   <!-- Dados pessoais -->
   <section class="card">
     <details id="profBox">
       <summary>Meus dados <span id="profSum"></span></summary>
       <div class="prof-body">
         <div class="row">
-          <div><label for="pPeso">Peso (kg)</label><input id="pPeso" type="number" inputmode="decimal" step="0.1"></div>
+          <div><label for="pPeso">Peso de referência (kg)</label><input id="pPeso" type="number" inputmode="decimal" step="0.1"></div>
           <div><label for="pAlt">Altura (cm)</label><input id="pAlt" type="number" inputmode="numeric"></div>
           <div><label for="pIdade">Idade</label><input id="pIdade" type="number" inputmode="numeric"></div>
         </div>
         <div class="row">
-          <div><label for="pSexo">Sexo</label><select id="pSexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></div>
+          <div><label for="pSexo">Sexo (coeficiente da equação)</label><select id="pSexo"><option value="M">Masculino</option><option value="F">Feminino</option></select></div>
           <div class="w2"><label for="pFator">Rotina fora dos exercícios</label>
             <select id="pFator">
               <option value="1.2">Sedentária (×1,2)</option>
@@ -198,7 +241,20 @@
               <option value="1.4">Ativa, muito tempo em pé (×1,4)</option>
             </select></div>
         </div>
+        <div class="row">
+          <div><label for="pNasc">Data de nascimento (opcional)</label><input id="pNasc" type="date"></div>
+        </div>
+        <p class="hint">Com a data de nascimento, a idade se atualiza sozinha. A equação tem um coeficiente masculino e um feminino: escolha o seu (o app não deduz pelo nome).</p>
         <p class="hint">Os exercícios são somados à parte, então escolha a rotina <b>sem</b> contar treinos — senão eles entram duas vezes.</p>
+        <fieldset class="conds">
+          <legend>Condições especiais</legend>
+          <label class="chk"><input type="checkbox" id="condGestante"> Gestante</label>
+          <label class="chk"><input type="checkbox" id="condLactante"> Amamentando</label>
+          <label class="chk"><input type="checkbox" id="condTA"> Transtorno alimentar (atual ou passado)</label>
+          <label class="chk"><input type="checkbox" id="condRenal"> Doença renal</label>
+          <label class="chk"><input type="checkbox" id="condLiquidos"> Restrição de líquidos</label>
+          <p class="hint">Com alguma delas, ou fora de 18 a 64 anos, o app não sugere metas automáticas: defina-as com sua equipe de saúde.</p>
+        </fieldset>
         <div class="field">
           <label for="pMeta">Meta diária de consumo (kcal)</label>
           <input id="pMeta" type="number" inputmode="numeric" placeholder="A definida pelo seu médico ou nutricionista">

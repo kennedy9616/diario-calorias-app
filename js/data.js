@@ -109,3 +109,22 @@ const SINONIMOS = {
   suco: ["juice"], suina: ["pork"], tomate: ["tomato"], torrada: ["toast"], torta: ["pie"], trigo: ["wheat"],
   uva: ["grape"], vinagre: ["vinegar"], vinho: ["wine"]
 };
+
+// Medidas corporais do histórico (faixas aceitas, para barrar erro de digitação)
+const MEDIDAS_CAMPOS = [
+  { k: "peso_kg", n: "Peso", u: "kg", min: 20, max: 400, id: "mPeso" },
+  { k: "cintura_cm", n: "Cintura", u: "cm", min: 30, max: 300, id: "mCintura" },
+  { k: "quadril_cm", n: "Quadril", u: "cm", min: 30, max: 300, id: "mQuadril" },
+  { k: "braco_cm", n: "Braço", u: "cm", min: 10, max: 100, id: "mBraco" },
+  { k: "coxa_cm", n: "Coxa", u: "cm", min: 20, max: 150, id: "mCoxa" },
+  { k: "gordura_pct", n: "Gordura corporal", u: "%", min: 2, max: 75, id: "mGordura" }
+];
+
+// Condições em que o app não sugere metas automáticas (fluxo individualizado)
+const CONDICOES = [
+  { k: "gestante", id: "condGestante", n: "Gestante" },
+  { k: "lactante", id: "condLactante", n: "Amamentando" },
+  { k: "ta", id: "condTA", n: "Transtorno alimentar (atual ou passado)" },
+  { k: "renal", id: "condRenal", n: "Doença renal" },
+  { k: "liquidos", id: "condLiquidos", n: "Restrição de líquidos" }
+];

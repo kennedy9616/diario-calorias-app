@@ -24,7 +24,7 @@ function renderSummary() {
   const t = totals();
   $("sCons").textContent = fmt(t.cons);
   $("sGasto").textContent = fmt(t.gasto);
-  $("sTmb").textContent = fmt(tmb());
+  $("sTmb").textContent = fmt(dayTmb(cur));
   $("sEx").textContent = fmt(t.ex);
   $("sCarb").textContent = fmtTotal(t, "carb", "g");
   $("sProt").textContent = fmtTotal(t, "prot", "g");
@@ -169,7 +169,11 @@ function renderChart() {
 function renderProfile() {
   $("pPeso").value = profile.peso;
   $("pAlt").value = profile.altura;
-  $("pIdade").value = profile.idade;
+  $("pIdade").value = profile.nascimento ? idadeAtual() : profile.idade;
+  $("pIdade").disabled = !!profile.nascimento;
+  $("pNasc").value = profile.nascimento || "";
+  $("pNasc").max = TODAY;
+  CONDICOES.forEach(c => { $(c.id).checked = (profile.condicoes || []).includes(c.k); });
   $("pSexo").value = profile.sexo;
   $("pFator").value = String(profile.fator);
   $("pMeta").value = profile.meta || "";
@@ -177,8 +181,8 @@ function renderProfile() {
 }
 
 function renderProfileInfo() {
-  $("profSum").textContent = `${fmt1(profile.peso)} kg · TMB ${fmt(tmb())}`;
-  $("tmbInfo").innerHTML = `Taxa metabólica basal: <b>${fmt(tmb())} kcal</b>. Com a rotina escolhida, gasto diário sem exercícios: <b>${fmt(tdee())} kcal</b>.`;
+  $("profSum").textContent = `${fmt1(pesoReferencia().peso)} kg · TMB ${fmt(tmb())}`;
+  $("tmbInfo").innerHTML = `Taxa metabólica basal: <b>${fmt(tmb())} kcal</b>. Com a rotina escolhida, gasto diário sem exercícios: <b>${fmt(tdee())} kcal</b>. Detalhes e peso de referência no cartão da TMB, acima.`;
 }
 
 function renderAll() {
@@ -187,6 +191,7 @@ function renderAll() {
   renderFoods();
   renderEx();
   renderChart();
+  renderHistorico();
   updateFoodPreview();
   updateExPreview();
 }

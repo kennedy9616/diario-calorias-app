@@ -255,7 +255,7 @@ function exKcal() {
   const i = Number($("exInt").value);
   const min = parseFloat($("exMin").value) || 0;
   // gasto extra além do basal: (MET − 1) × kg × horas
-  return { e, i, min, kcal: Math.max(0, (e.m[i] - 1)) * profile.peso * min / 60 };
+  return { e, i, min, kcal: Math.max(0, (e.m[i] - 1)) * perfilCalculo().peso * min / 60 };
 }
 
 function updateExPreview() {
@@ -306,16 +306,21 @@ function readProfileInputs() {
   profile.peso = n("pPeso", profile.peso);
   profile.altura = n("pAlt", profile.altura);
   profile.idade = n("pIdade", profile.idade);
+  profile.nascimento = idadeEm($("pNasc").value, TODAY) == null ? "" : $("pNasc").value;
+  if (profile.nascimento) profile.idade = idadeAtual();
   profile.sexo = $("pSexo").value;
+  profile.condicoes = CONDICOES.filter(c => $(c.id).checked).map(c => c.k);
   profile.fator = Number($("pFator").value);
   const m = parseFloat($("pMeta").value);
   profile.meta = m > 0 ? Math.round(m) : null;
-  renderProfileInfo(); renderSummary(); renderChart(); updateExPreview();
+  $("pIdade").disabled = !!profile.nascimento;
+  if (profile.nascimento) $("pIdade").value = profile.idade;
+  renderProfileInfo(); renderSummary(); renderChart(); renderHistorico(); updateExPreview();
   if (ready) saveProfile();
 }
 
 function initProfileForm() {
-  ["pPeso", "pAlt", "pIdade", "pSexo", "pFator", "pMeta"].forEach(id => {
+  ["pPeso", "pAlt", "pIdade", "pNasc", "pSexo", "pFator", "pMeta"].concat(CONDICOES.map(c => c.id)).forEach(id => {
     $(id).addEventListener("input", readProfileInputs);
     $(id).addEventListener("change", readProfileInputs);
   });
