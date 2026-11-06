@@ -1,0 +1,7 @@
+# Quebras de linha iguais em Windows, Linux e macOS (o hash da base depende disso)
+* text=auto eol=lf
+*.png binary
+
+# Arquivos de dados grandes: sem diff linha a linha
+data/alimentos_unificados.json -diff
+data/alimentos-base.js linguist-generated=true -diff
