@@ -1,7 +1,7 @@
 /* ==========================================================
    Inicialização do app
    Ordem dos scripts (index.html): data → utils → state → foods
-   → storage → render → forms → install → app
+   → storage → render → forms → install → nav → app
    ========================================================== */
 
 function initTabs() {
@@ -26,6 +26,7 @@ function init() {
   initTabs();
   initDateNav();
   initInstall();
+  initNav();
 
   const hadData = loadSaved();
   ready = true;
@@ -34,10 +35,11 @@ function init() {
   renderProfile();
   renderAll();
 
-  // primeira vez: abre "Meus dados" para a pessoa preencher peso, altura e idade
+  // primeira vez: abre "Meus dados" (aba Histórico) para a pessoa preencher peso, altura e idade
   if (!hadData) {
+    showView("historico");
     $("profBox").open = true;
-    toast("Bem-vindo! Preencha “Meus dados” no fim da página.", 4000);
+    toast("Bem-vindo! Preencha “Meus dados” para calcular seu gasto.", 4000);
   }
 
   // base completa de alimentos (~2 MB): carrega depois que a tela já apareceu

@@ -88,6 +88,7 @@ function loadApp({ base = false, storage = new Map(), hash = "" } = {}) {
     history: { replaceState(_s, _t, url) { location.hash = String(url).replace(/^[^#]*/, ""); } },
     navigator: { userAgent: "test", platform: "", maxTouchPoints: 0 },
     addEventListener() {},
+    scrollTo() {},
     getComputedStyle: () => ({ getPropertyValue: () => "#000" }),
     matchMedia: () => ({ matches: false }),
     showSaveFilePicker() {},

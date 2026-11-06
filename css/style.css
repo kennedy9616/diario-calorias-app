@@ -53,7 +53,7 @@ body {
   padding:
     calc(16px + env(safe-area-inset-top))
     calc(14px + env(safe-area-inset-right))
-    calc(48px + env(safe-area-inset-bottom))
+    calc(88px + env(safe-area-inset-bottom))
     calc(14px + env(safe-area-inset-left));
 }
 .num { font-variant-numeric: tabular-nums; }
@@ -427,7 +427,7 @@ footer { font-size: 11.5px; color: var(--muted); line-height: 1.5; padding: 4px 
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(20px + env(safe-area-inset-bottom));
+  bottom: calc(80px + env(safe-area-inset-bottom));
   transform: translateX(-50%) translateY(120px);
   background: var(--ink);
   color: var(--bg);
@@ -441,3 +441,51 @@ footer { font-size: 11.5px; color: var(--muted); line-height: 1.5; padding: 4px 
   text-align: center;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ---------- Navegação inferior (abas principais) ---------- */
+.bnav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 14;
+  background: var(--card);
+  border-top: 1px solid var(--line);
+  padding:
+    4px
+    calc(6px + env(safe-area-inset-right))
+    calc(4px + env(safe-area-inset-bottom))
+    calc(6px + env(safe-area-inset-left));
+}
+.bnav .in { display: flex; max-width: 560px; margin: 0 auto; }
+.bnav button {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: 6px 0 4px;
+  background: none;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+}
+.bnav svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .15s;
+}
+.bnav button.on { color: var(--ink); }
+.bnav button.on svg { stroke-width: 2.5; }
+.bnav button:active svg { transform: scale(.9); }
+.bnav button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }

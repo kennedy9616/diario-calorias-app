@@ -6,6 +6,7 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 
 ### Adicionado
 - Testes de regressão automatizados (`tests/`, `node:test`), obrigatórios no CI e nos hooks de merge/push (`.githooks`).
+- Barra de navegação inferior com 4 abas: Água, Calorias, Analytics e Histórico. A aba aberta fica no endereço (`#agua`...).
 
 ## [1.1.0] - 2026-11-05
 
