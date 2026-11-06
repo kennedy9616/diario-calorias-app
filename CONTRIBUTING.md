@@ -59,6 +59,10 @@ Todo PR passa por **QA** (testes funcionais no navegador, celular, offline e dad
 - `data/alimentos_usuario.json`: alimentos cadastrados por usuários, no mesmo formato.
 - `data/alimentos-base.js`: versão compacta que o app carrega. É **gerada**: rode `perl tools/gerar-base.pl`.
 
+Os nomes USDA em `alimentos_unificados.json` são localizados para `pt-BR`; `nome_original` e `idioma_original` preservam a denominação da fonte. Ao atualizar a base oficial, reaplique as traduções somente quando ID e nome original coincidirem. Não traduza nem altere IDs, nutrientes ou pesos de porções. Revise nomes novos antes de publicar. As categorias e porções mantêm o idioma da fonte.
+
+O hotfix 1.1.1 usou o [modelo Argos inglês → português brasileiro](https://github.com/argosopentech/argospm-index) com revisão de terminologia e por amostragem. A terminologia de cortes foi conferida com o [catálogo da ABIEC](https://abiec.com.br/wp-content/uploads/2025/11/Catalogo-de-Cortes.pdf). A tradução não é uma nova fonte de composição nutricional.
+
 ### Incluir alimentos cadastrados no app
 
 1. No app, menu do topo › **Exportar alimentos cadastrados**. Isso baixa o arquivo `alimentos-usuario-AAAA-MM-DD.json`.

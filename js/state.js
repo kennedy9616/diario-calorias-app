@@ -2,7 +2,7 @@
    Estado do app e cálculos de gasto calórico
    ========================================================== */
 
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.1.1";
 const TODAY = keyOf(new Date());
 
 // valores iniciais para quem abre o app pela primeira vez
