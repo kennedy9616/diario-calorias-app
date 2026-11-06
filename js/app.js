@@ -1,7 +1,7 @@
 /* ==========================================================
    Inicialização do app
    Ordem dos scripts (index.html): data → utils → state → foods
-   → storage → render → forms → body → install → nav → app
+   → storage → render → forms → body → metas → analytics → install → nav → app
    ========================================================== */
 
 function initTabs() {
@@ -24,6 +24,8 @@ function init() {
   initExForm();
   initProfileForm();
   initBodyForm();
+  initMetasForm();
+  initDiaCompleto();
   initTabs();
   initDateNav();
   initInstall();

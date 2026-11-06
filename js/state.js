@@ -6,11 +6,13 @@ const APP_VERSION = "1.1.0";
 const TODAY = keyOf(new Date());
 
 // valores iniciais para quem abre o app pela primeira vez
-const DEFAULT_PROFILE = { peso: 70, altura: 170, idade: 30, nascimento: "", sexo: "M", fator: 1.2, meta: null, condicoes: [], customFoods: [] };
+const DEFAULT_PROFILE = { peso: 70, altura: 170, idade: 30, nascimento: "", sexo: "M", fator: 1.2, meta: null, condicoes: [], objetivo: "manter",
+  treino: { tipo: "nenhum", dias: 0, min: 0, intensidade: "moderada" }, customFoods: [] };
 
 let profile = clone(DEFAULT_PROFILE);
 let days = {};            // "AAAA-MM-DD" -> { foods: [], ex: [], tdee }
 let medidas = [];        // histórico de peso e medidas corporais (js/body.js)
+let metas = [];          // metas versionadas: kcal, proteína, água (js/metas.js)
 let savedAt = null;       // quando os dados foram alterados pela última vez
 let cur = TODAY;          // dia mostrado na tela
 let selFood = null;       // alimento escolhido na lista de sugestões
@@ -62,6 +64,12 @@ function totals(k = cur) {
     gord: sum(d.foods, "gord"),
     fibra: sum(d.foods, "fibra"),
     sodio: sum(d.foods, "sodio"),
+    acucar: sum(d.foods, "acucar"),
+    gsat: sum(d.foods, "gsat"),
+    colest: sum(d.foods, "colest"),
+    calcio: sum(d.foods, "calcio"),
+    ferro: sum(d.foods, "ferro"),
+    potassio: sum(d.foods, "potassio"),
     ex, base, gasto: base + ex, has: d.foods.length > 0, n: d.foods.length, falta
   };
 }

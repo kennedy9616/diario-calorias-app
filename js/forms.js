@@ -172,6 +172,17 @@ function updateFoodPreview() {
 }
 
 
+// nutrientes da quantidade registrada: kcal e mg inteiros (ferro com 1 casa), g com 1 casa; null = sem dado
+const ENTRY_INTEIROS = ["kcal", "sodio", "colest", "calcio", "potassio"];
+function nutEntry(v) {
+  const o = {};
+  Object.keys(NUT).forEach(k => {
+    const x = v[NUT[k]];
+    o[k] = x == null ? null : ENTRY_INTEIROS.includes(k) ? Math.round(x) : r1(x);
+  });
+  return o;
+}
+
 function addFood() {
   let f = currentFood();
   const g = grams(f);
@@ -193,12 +204,7 @@ function addFood() {
     name: f.n,
     g: r1(g),
     unit: u.startsWith("p") ? "porcao" : u,
-    kcal: Math.round(v[NUT.kcal]),
-    carb: r1(v[NUT.carb]),
-    prot: r1(v[NUT.prot]),
-    gord: r1(v[NUT.gord]),
-    fibra: r1(v[NUT.fibra]),
-    sodio: v[NUT.sodio] == null ? null : Math.round(v[NUT.sodio]),
+    ...nutEntry(v),
     meal: $("meal").value,
     t: Date.now()
   };
@@ -274,7 +280,7 @@ function addExercise() {
   const { e, i, min, kcal } = exKcal();
   if (!(min > 0)) return;
   if (!days[cur]) days[cur] = { foods: [], ex: [] };
-  days[cur].ex.push({ id: uid(), name: e.n, int: i, min, met: e.m[i], kcal: Math.round(kcal), t: Date.now() });
+  days[cur].ex.push({ id: uid(), tipo: e.id, name: e.n, int: i, min, met: e.m[i], kcal: Math.round(kcal), t: Date.now() });
   saveDay();
   toast(`${e.n} adicionado`);
   $("exMin").value = "";
@@ -311,8 +317,6 @@ function readProfileInputs() {
   profile.sexo = $("pSexo").value;
   profile.condicoes = CONDICOES.filter(c => $(c.id).checked).map(c => c.k);
   profile.fator = Number($("pFator").value);
-  const m = parseFloat($("pMeta").value);
-  profile.meta = m > 0 ? Math.round(m) : null;
   $("pIdade").disabled = !!profile.nascimento;
   if (profile.nascimento) $("pIdade").value = profile.idade;
   renderProfileInfo(); renderSummary(); renderChart(); renderHistorico(); updateExPreview();
@@ -320,7 +324,7 @@ function readProfileInputs() {
 }
 
 function initProfileForm() {
-  ["pPeso", "pAlt", "pIdade", "pNasc", "pSexo", "pFator", "pMeta"].concat(CONDICOES.map(c => c.id)).forEach(id => {
+  ["pPeso", "pAlt", "pIdade", "pNasc", "pSexo", "pFator"].concat(CONDICOES.map(c => c.id)).forEach(id => {
     $(id).addEventListener("input", readProfileInputs);
     $(id).addEventListener("change", readProfileInputs);
   });

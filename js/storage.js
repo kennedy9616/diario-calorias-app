@@ -22,15 +22,16 @@ let fileState = "none";   // none | ok | permission | error
 /* ---------- Formato dos dados ---------- */
 // versao 2: alimentos cadastrados no schema da base (data/alimentos_unificados.json)
 // versao 3: histórico de peso e medidas (medidas)
+// versao 4: metas versionadas (metas); profile.meta migra para metas
 function snapshot() {
-  return { app: "diario-calorias", versao: 3, savedAt, profile, days, medidas };
+  return { app: "diario-calorias", versao: 4, savedAt, profile, days, medidas, metas };
 }
 // backup do app (profile/days) ou arquivo de "Exportar alimentos cadastrados" (alimentos)
 function validData(d) {
-  return !!d && typeof d === "object" && !Array.isArray(d) && !!(d.profile || d.days || Array.isArray(d.alimentos) || Array.isArray(d.medidas));
+  return !!d && typeof d === "object" && !Array.isArray(d) && !!(d.profile || d.days || Array.isArray(d.alimentos) || Array.isArray(d.medidas) || Array.isArray(d.metas));
 }
 // campos simples guardados em cada dia, além das listas
-const DAY_EXTRA = ["tdee", "tmb", "pesoRef", "pesoMetodo"];
+const DAY_EXTRA = ["tdee", "tmb", "pesoRef", "pesoMetodo", "completo"];
 function cleanDays(src) {
   const out = {};
   Object.keys(src || {}).forEach(k => {
@@ -45,6 +46,14 @@ function cleanDays(src) {
 function cleanProfileExtras() {
   profile.condicoes = Array.isArray(profile.condicoes) ? profile.condicoes.filter(k => CONDICOES.some(c => c.k === k)) : [];
   if (idadeEm(profile.nascimento, TODAY) == null) profile.nascimento = "";
+  if (profile.objetivo !== "perder") profile.objetivo = "manter";
+  const t = profile.treino && typeof profile.treino === "object" ? profile.treino : {};
+  profile.treino = {
+    tipo: ["nenhum", "aerobico", "forca", "misto"].includes(t.tipo) ? t.tipo : "nenhum",
+    dias: Number.isInteger(t.dias) && t.dias >= 0 && t.dias <= 7 ? t.dias : 0,
+    min: isNum(t.min) && t.min >= 0 && t.min <= 600 ? t.min : 0,
+    intensidade: ["leve", "moderada", "vigorosa"].includes(t.intensidade) ? t.intensidade : "moderada"
+  };
 }
 function replaceWith(d) {
   profile = Object.assign(clone(DEFAULT_PROFILE), d.profile || {});
@@ -52,6 +61,8 @@ function replaceWith(d) {
   cleanProfileExtras();
   days = cleanDays(d.days);
   medidas = cleanMedidas(d.medidas);
+  metas = cleanMetas(d.metas);
+  migrarMetaAntiga();
   savedAt = d.savedAt || null;
 }
 // junta sem perder nada dos dois lados (usado ao abrir um arquivo)
@@ -65,6 +76,7 @@ function mergeIn(d) {
   }
   if (Array.isArray(d.alimentos)) profile.customFoods = cleanCustomFoods((profile.customFoods || []).concat(d.alimentos));
   if (Array.isArray(d.medidas)) medidas = cleanMedidas(medidas.concat(d.medidas));
+  if (Array.isArray(d.metas)) metas = cleanMetas(metas.concat(d.metas));
   const inc = cleanDays(d.days);
   Object.keys(inc).forEach(k => {
     const mine = days[k] || { foods: [], ex: [] };
@@ -74,6 +86,7 @@ function mergeIn(d) {
     DAY_EXTRA.forEach(x => { if (mine[x] == null && inc[k][x] != null) mine[x] = inc[k][x]; });
     days[k] = mine;
   });
+  migrarMetaAntiga();
 }
 
 /* ---------- Salvar ---------- */

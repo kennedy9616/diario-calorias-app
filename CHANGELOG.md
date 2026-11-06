@@ -9,6 +9,10 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 - Barra de navegação inferior com 4 abas: Água, Calorias, Analytics e Histórico. A aba aberta fica no endereço (`#agua`...).
 - Aba Histórico: taxa metabólica basal (Mifflin-St Jeor) com dados detalhados (data de nascimento, coeficiente da equação, condições especiais), registro de peso e medidas corporais, tendência de 7 dias, variação semanal com cobertura e gráfico de evolução.
 - A TMB é recalculada automaticamente pela média de peso dos últimos 7 dias quando há pesagens em 3 ou mais desses dias (pesagem isolada não muda o cálculo). Cada dia guarda TMB e peso de referência da época.
+- Aba Analytics: resumo do dia (consumo, diferença da meta, déficit estimado só em dia completo, proteína % da meta, carboidratos, gorduras, fibras, açúcares, colesterol e minerais), semana (calorias × meta do dia, regularidade, consumo médio dos dias completos, minutos equivalentes de atividade e dias de força) com visão em tabela.
+- Metas versionadas de calorias (estimativa com déficit 0/10/15%, profissional ou manual) e proteína (EFSA 0,83 g/kg ou ISSN 1,4–2,0 g/kg com treino regular), com método, fonte, vigência e dados usados. Cada dia é comparado com a meta vigente naquele dia.
+- Opção “Registrei tudo o que comi neste dia” (diário completo).
+
 
 ## [1.1.0] - 2026-11-05
 

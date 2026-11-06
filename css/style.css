@@ -508,3 +508,17 @@ footer { font-size: 11.5px; color: var(--muted); line-height: 1.5; padding: 4px 
 label.chk { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--ink); margin: 6px 0; cursor: pointer; }
 label.chk input { width: 18px; height: 18px; flex: none; margin: 0; padding: 0; -webkit-appearance: auto; appearance: auto; accent-color: var(--accent); }
 input:disabled { opacity: .6; }
+
+/* ---------- Analytics ---------- */
+.ntab { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+.ntab td, .ntab th { padding: 5px 2px; border-bottom: 1px solid var(--line); text-align: left; }
+.ntab th { font-size: 11.5px; color: var(--muted); font-weight: 700; }
+.ntab td.num { text-align: right; font-weight: 700; white-space: nowrap; }
+.an-stats { margin-top: 12px; }
+.tbl { margin-top: 10px; }
+.tbl summary { font-size: 13px; color: var(--accent); }
+.legend .hol { background: none; border: 2px dashed var(--accent); width: 9px; height: 9px; }
+.legend .ln.mt { background: var(--ink); }
+h3.sec { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 16px 0 4px; }
+.sec-btn { margin-bottom: 4px; }
+label.chk.completo { margin-top: 12px; font-size: 13.5px; }
