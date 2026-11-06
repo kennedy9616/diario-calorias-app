@@ -13,14 +13,25 @@ function renderDate() {
   $("next").disabled = cur >= TODAY;
 }
 
+// total de um nutriente: "12 g"; "≥ 12 g" se algum alimento não tem o dado; "—" se nenhum tem
+function fmtTotal(t, key, unit) {
+  const f = t.falta[key] || 0;
+  if (t.n && f === t.n) return "—";
+  return (f ? "≥ " : "") + fmt(t[key]) + " " + unit;
+}
+
 function renderSummary() {
   const t = totals();
   $("sCons").textContent = fmt(t.cons);
   $("sGasto").textContent = fmt(t.gasto);
   $("sTmb").textContent = fmt(tmb());
   $("sEx").textContent = fmt(t.ex);
-  $("sCarb").textContent = fmt(t.carb) + " g";
-  $("sProt").textContent = fmt(t.prot) + " g";
+  $("sCarb").textContent = fmtTotal(t, "carb", "g");
+  $("sProt").textContent = fmtTotal(t, "prot", "g");
+  $("sGord").textContent = fmtTotal(t, "gord", "g");
+  $("sMicro").textContent = `Fibras ${fmtTotal(t, "fibra", "g")} · Sódio ${fmtTotal(t, "sodio", "mg")}`;
+  const parcial = ["carb", "prot", "gord", "fibra", "sodio"].some(k => t.falta[k]);
+  $("sHint").classList.toggle("hide", !parcial);
 
   const b = $("balance");
   if (!t.has && !t.ex) {
@@ -59,6 +70,13 @@ function itemEl(main, sub, kcal, onDel) {
   return el;
 }
 
+// "150 g", "1,5 kg", "2 × 1 cup (480 g)"
+function qtyLabel(f) {
+  if (f.unit === "porcao") return `${fmt1(f.qtd || 1)} × ${f.porcao} (${fmt(f.g || 0)} g)`;
+  if (f.unit === "kg") return fmt1(f.g / 1000) + " kg";
+  return fmt(f.g || 0) + " " + (f.unit === "ml" ? "ml" : "g");
+}
+
 function renderFoods() {
   const box = $("foodList");
   box.innerHTML = "";
@@ -78,10 +96,11 @@ function renderFoods() {
     h.children[1].textContent = fmt(items.reduce((s, f) => s + (f.kcal || 0), 0)) + " kcal";
     g.appendChild(h);
     items.forEach(f => {
-      const q = f.unit === "kg" ? fmt1(f.g / 1000) + " kg" : fmt(f.g || 0) + " " + (f.unit === "ml" ? "ml" : "g");
+      const macros = [[f.carb, "carb"], [f.prot, "prot"], [f.gord, "gord"]]
+        .filter(([v]) => v != null).map(([v, k]) => `${fmt(v)} g ${k}`);
       g.appendChild(itemEl(
         f.name,
-        `${q} · ${fmt(f.carb || 0)} g carb · ${fmt(f.prot || 0)} g prot`,
+        [qtyLabel(f)].concat(macros).join(" · "),
         fmt(f.kcal || 0) + " kcal",
         () => { days[cur].foods = days[cur].foods.filter(x => x.id !== f.id); saveDay(); renderAll(); }
       ));

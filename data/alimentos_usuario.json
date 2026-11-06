@@ -1,0 +1,5 @@
+{
+  "versao_schema": "1.0.0",
+  "descricao": "Alimentos cadastrados por usuários do Diário de Calorias. Mesmo formato de alimentos_unificados.json. Para incluir alimentos exportados pelo app, use: perl tools/mesclar-alimentos.pl <arquivo-exportado.json>",
+  "alimentos": []
+}

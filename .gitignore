@@ -9,3 +9,6 @@ Desktop.ini
 
 # Cópias de segurança de dados pessoais do app
 diario-calorias*.json
+
+# Alimentos exportados pelo app (use tools/mesclar-alimentos.pl)
+alimentos-usuario-*.json

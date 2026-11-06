@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, master]
+  push:
+    branches: [develop, master]
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: Verificações
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Base de alimentos gerada e atualizada
+        run: perl tools/gerar-base.pl --verificar
+
+      - name: Sintaxe do JavaScript
+        run: for f in js/*.js sw.js; do node --check "$f" || exit 1; done
+
+      - name: Regressões de busca, dados e importação
+        run: node tools/smoke.cjs
+
+      - name: JSON válidos
+        run: |
+          for f in manifest.webmanifest data/alimentos_usuario.json; do
+            node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$f" || { echo "JSON inválido: $f"; exit 1; }
+          done
+
+      - name: Arquivos listados no service worker existem
+        run: |
+          grep -oE '"\./[^"]*"' sw.js | tr -d '"' | while read -r p; do
+            [ "$p" = "./" ] && continue
+            test -f "$p" || { echo "sw.js lista um arquivo que não existe: $p"; exit 1; }
+          done
+
+      - name: Scripts carregados pelo index.html existem
+        run: |
+          grep -oE 'src="js/[^"]+"' index.html | sed 's/src="//; s/"$//' | while read -r p; do
+            test -f "$p" || { echo "index.html carrega um arquivo que não existe: $p"; exit 1; }
+            grep -q "\"./$p\"" sw.js || { echo "$p não está na lista FILES do sw.js (não funcionaria offline)"; exit 1; }
+          done
