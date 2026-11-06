@@ -7,6 +7,8 @@ Mudanças de cada versão. Formato baseado em [Keep a Changelog](https://keepach
 ### Adicionado
 - Testes de regressão automatizados (`tests/`, `node:test`), obrigatórios no CI e nos hooks de merge/push (`.githooks`).
 - Barra de navegação inferior com 4 abas: Água, Calorias, Analytics e Histórico. A aba aberta fica no endereço (`#agua`...).
+- Aba Histórico: taxa metabólica basal (Mifflin-St Jeor) com dados detalhados (data de nascimento, coeficiente da equação, condições especiais), registro de peso e medidas corporais, tendência de 7 dias, variação semanal com cobertura e gráfico de evolução.
+- A TMB é recalculada automaticamente pela média de peso dos últimos 7 dias quando há pesagens em 3 ou mais desses dias (pesagem isolada não muda o cálculo). Cada dia guarda TMB e peso de referência da época.
 
 ## [1.1.0] - 2026-11-05
 
